@@ -17,7 +17,10 @@ def fopen(filename, mode='r'):
 
 
 class TextIterator:
-    """Simple Bitext iterator."""
+    """
+    Simple Bitext iterator.
+    """
+
     def __init__(self,
                  source, source_dict,
                  target=None, target_dict=None,
@@ -29,6 +32,7 @@ class TextIterator:
                  n_words_source=-1,
                  n_words_target=-1,
                  shuffle_per_epoch=False):
+        # dict: token->id
         self.source_file = source
         self.target_file = target
         self.source = fopen(source, 'r')
@@ -86,17 +90,17 @@ class TextIterator:
         fds = [open(ff) for ff in files]
         for l in fds[0]:
             lines = [l.strip()] + [ff.readline().strip() for ff in fds[1:]]
-            print >>tf, "|||".join(lines)
+            print >> tf, "|||".join(lines)
         [ff.close() for ff in fds]
         tf.close()
         tf = open(tpath, 'r')
         lines = tf.readlines()
         random.shuffle(lines)
-        fds = [open(ff+'.reshuf','w') for ff in files]
+        fds = [open(ff + '.reshuf', 'w') for ff in files]
         for l in lines:
             s = l.strip().split('|||')
             for ii, fd in enumerate(fds):
-                print >>fd, s[ii]
+                print >> fd, s[ii]
         [ff.close() for ff in fds]
         os.remove(tpath)
         return

@@ -21,4 +21,3 @@ with open(from_file) as from_file:
 matched_lines = "".join(matched_lines)
 to_file_out.write(matched_lines)
 to_file_out.close()
-

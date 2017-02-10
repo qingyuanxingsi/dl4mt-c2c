@@ -9,6 +9,7 @@ from nmt_many import train
 from conv_tools import *
 from prepare_data import *
 
+
 def main(job_id, args):
     save_file_name = args.model_name
     langs = "de_en cs_en fi_en ru_en".split()
@@ -75,7 +76,7 @@ def main(job_id, args):
         clip_c=args.clip_c,
 
         datasets=[source_dataset, target_dataset],
-        valid_datasets=[[s,t] for s,t in zip(valid_source_dataset, valid_target_dataset)],
+        valid_datasets=[[s, t] for s, t in zip(valid_source_dataset, valid_target_dataset)],
         dictionaries=[source_dictionary, target_dictionary],
 
         dropout_gru=args.dropout_gru,
@@ -93,6 +94,7 @@ def main(job_id, args):
     )
     return validerr
 
+
 if __name__ == '__main__':
 
     import sys, time
@@ -100,7 +102,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-translate', type=str, default="many_en")
     parser.add_argument('-highway', type=int, default=4)
-    
+
     parser.add_argument('-conv_width', type=str, default="1-2-3-4-5-6-7-8")
     parser.add_argument('-conv_nkernels', type=str, default="200-250-300-300-400-400-400-400")
 
@@ -120,7 +122,7 @@ if __name__ == '__main__':
     parser.add_argument('-maxlen_trg', type=int, default=500, help="")
     parser.add_argument('-maxlen_sample', type=int, default=500, help="")
 
-    parser.add_argument('-train_batch_size', type=str,)
+    parser.add_argument('-train_batch_size', type=str, )
     parser.add_argument('-valid_batch_size', type=int, default=60, help="")
     parser.add_argument('-batch_size', type=int, default=60, help="")
 
@@ -154,15 +156,15 @@ if __name__ == '__main__':
     if args.translate != "many_en":
         raise Exception('1')
 
-    args.train_batch_size = [ 14, 37, 6, 7 ]
+    args.train_batch_size = [14, 37, 6, 7]
 
     args.model_name = "multi-char2char"
 
-    args.conv_width = [ int(x) for x in args.conv_width.split("-") ]
-    args.conv_nkernels = [ int(x) for x in args.conv_nkernels.split("-") ]
+    args.conv_width = [int(x) for x in args.conv_width.split("-")]
+    args.conv_nkernels = [int(x) for x in args.conv_nkernels.split("-")]
 
-    args.model_path = "/misc/kcgscratch1/ChoGroup/jasonlee/dl4mt-c2c/models/" # change accordingly
-    args.data_path = "/misc/kcgscratch1/ChoGroup/jasonlee/temp_data/multi-wmt15/" # change accordingly
+    args.model_path = "/misc/kcgscratch1/ChoGroup/jasonlee/dl4mt-c2c/models/"  # change accordingly
+    args.data_path = "/misc/kcgscratch1/ChoGroup/jasonlee/temp_data/multi-wmt15/"  # change accordingly
     args.model_path = args.model_path + args.translate + "/"
 
     print "Model path:", args.model_path

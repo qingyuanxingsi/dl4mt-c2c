@@ -9,6 +9,7 @@ from nmt import train
 from conv_tools import *
 from prepare_data import *
 
+
 def main(job_id, args):
     save_file_name = args.model_name
     source_dataset = args.data_path + wmts[args.translate]['train'][0][0]
@@ -85,24 +86,25 @@ def main(job_id, args):
     )
     return validerr
 
+
 if __name__ == '__main__':
 
     import sys, time
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-translate', type=str, default="de_en", help="de_en / cs_en / fi_en / ru_en")
-    parser.add_argument('-highway', type=int, default=4)
+    parser.add_argument('-translate', type=str, default="pi_pw", help="de_en / cs_en / fi_en / ru_en / pi_pw")
+    parser.add_argument('-highway', type=int, default=3)
 
     parser.add_argument('-conv_width', type=str, default="1-2-3-4-5-6-7-8")
     parser.add_argument('-conv_nkernels', type=str, default="200-200-250-250-300-300-300-300")
 
-    parser.add_argument('-pool_window', type=int, default=5)
-    parser.add_argument('-pool_stride', type=int, default=5)
+    parser.add_argument('-pool_window', type=int, default=4)
+    parser.add_argument('-pool_stride', type=int, default=4)
 
-    parser.add_argument('-enc_dim', type=int, default=512)
-    parser.add_argument('-dec_dim', type=int, default=1024)
+    parser.add_argument('-enc_dim', type=int, default=256)
+    parser.add_argument('-dec_dim', type=int, default=512)
 
-    parser.add_argument('-dim_word', type=int, default=512)
+    parser.add_argument('-dim_word', type=int, default=256)
     parser.add_argument('-dim_word_src', type=int, default=128)
 
     parser.add_argument('-batch_size', type=int, default=64, help="")
@@ -111,16 +113,17 @@ if __name__ == '__main__':
     parser.add_argument('-dropout_gru', type=int, default=0, help="")
     parser.add_argument('-dropout_softmax', type=int, default=0, help="")
 
-    parser.add_argument('-maxlen', type=int, default=450, help="")
-    parser.add_argument('-maxlen_trg', type=int, default=500, help="")
-    parser.add_argument('-maxlen_sample', type=int, default=500, help="")
+    parser.add_argument('-maxlen', type=int, default=80, help="")
+    parser.add_argument('-maxlen_trg', type=int, default=20, help="")
+    parser.add_argument('-maxlen_sample', type=int, default=20, help="")
 
     parser.add_argument('-re_load', action="store_true", default=False)
     parser.add_argument('-re_load_old_setting', action="store_true", default=False)
-    parser.add_argument('-quit_immediately', action="store_true", default=False, help="if true, will not proceed training, only print the size of the model.")
+    parser.add_argument('-quit_immediately', action="store_true", default=False,
+                        help="if true, will not proceed training, only print the size of the model.")
 
     parser.add_argument('-max_epochs', type=int, default=1000000000000, help="")
-    parser.add_argument('-patience', type=int, default=-1, help="")
+    parser.add_argument('-patience', type=int, default=3, help="")
     parser.add_argument('-learning_rate', type=float, default=0.0001, help="")
 
     parser.add_argument('-n_words_src', type=int, default=304, help="298 for FI-EN")
@@ -146,16 +149,20 @@ if __name__ == '__main__':
         args.n_words_src = 304
         args.n_words = 302
 
-    if args.translate not in "de_en cs_en fi_en ru_en".split():
+    if args.translate == "pi_pw":
+        args.n_words_src = 71
+        args.n_words = 76
+
+    if args.translate not in "pi_pw de_en cs_en fi_en ru_en".split():
         raise Exception('1')
 
     args.model_name = "bi-char2char"
 
-    args.conv_width = [ int(x) for x in args.conv_width.split("-") ]
-    args.conv_nkernels = [ int(x) for x in args.conv_nkernels.split("-") ]
+    args.conv_width = [int(x) for x in args.conv_width.split("-")]
+    args.conv_nkernels = [int(x) for x in args.conv_nkernels.split("-")]
 
-    args.model_path = "/misc/kcgscratch1/ChoGroup/jasonlee/dl4mt-c2c/models/" # change accordingly
-    args.data_path = "/misc/kcgscratch1/ChoGroup/jasonlee/temp_data/wmt15/" # change accordingly
+    args.model_path = "/home/lanlin/workspace/dl4mt-c2c/models/"  # change accordingly
+    args.data_path = "/home/lanlin/workspace/data/"  # change accordingly
     args.model_path = args.model_path + args.translate + "/"
 
     print "Model path:", args.model_path

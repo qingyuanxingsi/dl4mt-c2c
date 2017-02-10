@@ -11,6 +11,8 @@ import warnings
 import sys
 import time
 
+
+# generate masks for the GRU layer
 def conv_mask_pool(x_mask, pool_stride):
     # x_mask.shape = (maxlen_x_pad, n_samples)
     maxlen_x_pad, n_samples = x_mask.shape[0], x_mask.shape[1]
@@ -19,8 +21,8 @@ def conv_mask_pool(x_mask, pool_stride):
     x_m = numpy.zeros((maxlen_pooled, n_samples)).astype('float32')
 
     for idx in range(n_samples):
-        x_sum = numpy.sum(x_mask[:,idx])
-        x_num = numpy.ceil( x_sum  / float(pool_stride))
+        x_sum = numpy.sum(x_mask[:, idx])
+        x_num = numpy.ceil(x_sum / float(pool_stride))
         x_num = int(x_num)
         x_m[:x_num, idx] = 1.0
 

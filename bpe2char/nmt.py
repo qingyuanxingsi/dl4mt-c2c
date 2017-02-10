@@ -1,6 +1,6 @@
-'''
+"""
 Build a simple neural machine translation model using GRU units
-'''
+"""
 import theano
 from theano import tensor
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
@@ -31,6 +31,7 @@ def prepare_data(seqs_x, seqs_y, maxlen=None, maxlen_trg=None,
         new_seqs_y = []
         new_lengths_x = []
         new_lengths_y = []
+        # ignore sequences whose length are above threshold
         for l_x, s_x, l_y, s_y in zip(lengths_x, seqs_x, lengths_y, seqs_y):
             if l_x < maxlen and l_y < maxlen_trg:
                 new_seqs_x.append(s_x)
@@ -55,9 +56,9 @@ def prepare_data(seqs_x, seqs_y, maxlen=None, maxlen_trg=None,
     y_mask = numpy.zeros((maxlen_y, n_samples)).astype('float32')
     for idx, [s_x, s_y] in enumerate(zip(seqs_x, seqs_y)):
         x[:lengths_x[idx], idx] = s_x
-        x_mask[:lengths_x[idx]+1, idx] = 1.
+        x_mask[:lengths_x[idx] + 1, idx] = 1.
         y[:lengths_y[idx], idx] = s_y
-        y_mask[:lengths_y[idx]+1, idx] = 1.
+        y_mask[:lengths_y[idx] + 1, idx] = 1.
 
     return x, x_mask, y, y_mask, n_samples
 
@@ -87,68 +88,67 @@ def pred_probs(f_log_probs, prepare_data, options, iterator, verbose=True, verbo
 
         if verbose:
             if numpy.mod(cnt, verboseFreq) == 0:
-                print >>sys.stderr, '%d samples computed' % (cnt * n_done)
+                print >> sys.stderr, '%d samples computed' % (cnt * n_done)
 
     return numpy.array(probs)
 
 
 def train(
-      dim_word=100,
-      dim_word_src=200,
-      enc_dim=1000,
-      dec_dim=1000,  # the number of LSTM units
-      patience=-1,  # early stopping patience
-      max_epochs=5000,
-      finish_after=-1,  # finish after this many updates
-      decay_c=0.,  # L2 regularization penalty
-      alpha_c=0.,  # alignment regularization
-      clip_c=-1.,  # gradient clipping threshold
-      lrate=0.01,  # learning rate
-      n_words_src=100000,  # source vocabulary size
-      n_words=100000,  # target vocabulary size
-      maxlen=100,  # maximum length of the description
-      maxlen_trg=None,  # maximum length of the description
-      maxlen_sample=1000,
-      optimizer='rmsprop',
-      batch_size=16,
-      valid_batch_size=16,
-      sort_size=20,
-      save_path=None,
-      save_file_name='model',
-      save_best_models=0,
-      dispFreq=100,
-      validFreq=100,
-      saveFreq=1000,   # save the parameters after every saveFreq updates
-      sampleFreq=-1,
-      verboseFreq=10000,
-      datasets=[
-          'data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok',
-          '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok'],
-      valid_datasets=['../data/dev/newstest2011.en.tok',
-                      '../data/dev/newstest2011.fr.tok'],
-      dictionaries=[
-          '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok.pkl',
-          '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok.pkl'],
-      source_word_level=0,
-      target_word_level=0,
-      use_dropout=False,
-      re_load=False,
-      re_load_old_setting=False,
-      uidx=None,
-      eidx=None,
-      cidx=None,
-      layers=None,
-      save_every_saveFreq=0,
-      save_burn_in=20000,
-      use_bpe=0,
-      gru='gru',
-      init_params=None,
-      build_model=None,
-      build_sampler=None,
-      gen_sample=None,
-      **kwargs
-    ):
-
+        dim_word=100,
+        dim_word_src=200,
+        enc_dim=1000,
+        dec_dim=1000,  # the number of LSTM units
+        patience=-1,  # early stopping patience
+        max_epochs=5000,
+        finish_after=-1,  # finish after this many updates
+        decay_c=0.,  # L2 regularization penalty
+        alpha_c=0.,  # alignment regularization
+        clip_c=-1.,  # gradient clipping threshold
+        lrate=0.01,  # learning rate
+        n_words_src=100000,  # source vocabulary size
+        n_words=100000,  # target vocabulary size
+        maxlen=100,  # maximum length of the description
+        maxlen_trg=None,  # maximum length of the description
+        maxlen_sample=1000,
+        optimizer='rmsprop',
+        batch_size=16,
+        valid_batch_size=16,
+        sort_size=20,
+        save_path=None,
+        save_file_name='model',
+        save_best_models=0,
+        dispFreq=100,
+        validFreq=100,
+        saveFreq=1000,  # save the parameters after every saveFreq updates
+        sampleFreq=-1,
+        verboseFreq=10000,
+        datasets=[
+            'data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok',
+            '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok'],
+        valid_datasets=['../data/dev/newstest2011.en.tok',
+                        '../data/dev/newstest2011.fr.tok'],
+        dictionaries=[
+            '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok.pkl',
+            '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok.pkl'],
+        source_word_level=0,
+        target_word_level=0,
+        use_dropout=False,
+        re_load=False,
+        re_load_old_setting=False,
+        uidx=None,
+        eidx=None,
+        cidx=None,
+        layers=None,
+        save_every_saveFreq=0,
+        save_burn_in=20000,
+        use_bpe=0,
+        gru='gru',
+        init_params=None,
+        build_model=None,
+        build_sampler=None,
+        gen_sample=None,
+        **kwargs
+):
     if gru not in "gru lngru".split():
         raise
 
@@ -190,7 +190,7 @@ def train(
         print 'You are reloading your experiment.. do not panic dude..'
         if re_load_old_setting:
             with open(model_name, 'rb') as f:
-                models_options = cPickle.load(f)
+                model_options = cPickle.load(f)
         params = load_params(file_name, params)
         # reload history
         model = numpy.load(file_name)
@@ -235,15 +235,15 @@ def train(
     tparams = init_tparams(params)
 
     trng, use_noise, \
-        x, x_mask, y, y_mask, \
-        opt_ret, \
-        cost = \
+    x, x_mask, y, y_mask, \
+    opt_ret, \
+    cost = \
         build_model(tparams, model_options)
     inps = [x, x_mask, y, y_mask]
 
     print 'Building sampler...\n',
     f_init, f_next = build_sampler(tparams, model_options, trng, use_noise)
-    #print 'Done'
+    # print 'Done'
 
     # before any regularizer
     print 'Building f_log_probs...',
@@ -273,11 +273,12 @@ def train(
         cost += weight_decay
 
     # regularize the alpha weights
+    # TODO:Alpha weights regularization
     if alpha_c > 0. and not model_options['decoder'].endswith('simple'):
         alpha_c = theano.shared(numpy.float32(alpha_c), name='alpha_c')
         alpha_reg = alpha_c * (
             (tensor.cast(y_mask.sum(0) // x_mask.sum(0), 'float32')[:, None] -
-             opt_ret['dec_alphas'].sum(0))**2).sum(1).mean()
+             opt_ret['dec_alphas'].sum(0)) ** 2).sum(1).mean()
         cost += alpha_reg
 
     # after all regularizers - compile the computational graph for cost
@@ -330,7 +331,7 @@ def train(
     if re_load:
         print "Checkpointed minibatch number: %d" % cidx
         for cc in xrange(cidx):
-            if numpy.mod(cc, 1000)==0:
+            if numpy.mod(cc, 1000) == 0:
                 print "Jumping [%d / %d] examples" % (cc, cidx)
             train.next()
 
@@ -394,11 +395,12 @@ def train(
             if numpy.mod(uidx, dispFreq) == 0:
                 ud = time.time() - ud_start
                 wps = n_samples / float(time.time() - time0)
-                print 'Epoch ', eidx, 'Update ', uidx, 'Cost ', cost, 'NaN_in_grad', NaN_grad_cnt,\
-                      'NaN_in_cost', NaN_cost_cnt, 'Gradient_clipped', clipped_cnt, 'UD ', ud, "%.2f sentence/s" % wps
+                print 'Epoch ', eidx, 'Update ', uidx, 'Cost ', cost, 'NaN_in_grad', NaN_grad_cnt, \
+                    'NaN_in_cost', NaN_cost_cnt, 'Gradient_clipped', clipped_cnt, 'UD ', ud, "%.2f sentence/s" % wps
                 ud_start = time.time()
 
             # generate some samples with the model and display them
+            # TODO:Sample generation
             if numpy.mod(uidx, sampleFreq) == 0 and sampleFreq != -1:
                 # FIXME: random selection?
                 for jj in xrange(numpy.minimum(5, x.shape[1])):
@@ -560,7 +562,7 @@ def train(
 
     use_noise.set_value(0.)
     valid_err = pred_probs(f_log_probs, prepare_data,
-                           model_options, valid).mean()
+                           model_options, valid, verboseFreq=1000).mean()
 
     print 'Valid ', valid_err
 
@@ -572,7 +574,7 @@ def train(
     numpy.savez(opt_file_name, **optparams)
     if best_p is not None and saveFreq != validFreq:
         best_file_name = '%s%s.%d.best.npz' % (save_path, save_file_name, uidx)
-        best_opt_file_name = '%s%s%s.%d.best.npz' % (save_path, save_file_name, '.grads',uidx)
+        best_opt_file_name = '%s%s%s.%d.best.npz' % (save_path, save_file_name, '.grads', uidx)
         numpy.savez(best_file_name, history_errs=history_errs, uidx=uidx, eidx=eidx, cidx=cidx, **best_p)
         numpy.savez(best_opt_file_name, **best_optp)
 

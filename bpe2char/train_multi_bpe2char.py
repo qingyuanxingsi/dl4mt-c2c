@@ -9,14 +9,19 @@ from nmt_many import train
 
 from collections import OrderedDict
 
+
 def main(job_id, params, args):
     print args
     save_file_name = args.model_name
-    source_dataset = [args.data_path + path + tr for path, tr in zip(params['train_data_path'], params['source_dataset'])]
-    target_dataset = [args.data_path + path + tr for path, tr in zip(params['train_data_path'], params['target_dataset'])]
+    source_dataset = [args.data_path + path + tr for path, tr in
+                      zip(params['train_data_path'], params['source_dataset'])]
+    target_dataset = [args.data_path + path + tr for path, tr in
+                      zip(params['train_data_path'], params['target_dataset'])]
 
-    valid_source_dataset = [args.data_path + path + tr for path, tr in zip(params['dev_data_path'], params['valid_source_dataset'])]
-    valid_target_dataset = [args.data_path + path + tr for path, tr in zip(params['dev_data_path'], params['valid_target_dataset'])]
+    valid_source_dataset = [args.data_path + path + tr for path, tr in
+                            zip(params['dev_data_path'], params['valid_source_dataset'])]
+    valid_target_dataset = [args.data_path + path + tr for path, tr in
+                            zip(params['dev_data_path'], params['valid_target_dataset'])]
 
     source_dictionary = args.dic_path + args.source_dictionary
     target_dictionary = args.dic_path + args.target_dictionary
@@ -58,7 +63,7 @@ def main(job_id, params, args):
         clip_c=int(params['clip_c']),
 
         datasets=[source_dataset, target_dataset],
-        valid_datasets=[[s,t] for s,t in zip(valid_source_dataset, valid_target_dataset)],
+        valid_datasets=[[s, t] for s, t in zip(valid_source_dataset, valid_target_dataset)],
         dictionaries=[source_dictionary, target_dictionary],
 
         use_dropout=int(params['use_dropout']),
@@ -72,6 +77,7 @@ def main(job_id, params, args):
         gen_sample=gen_sample,
     )
     return validerr
+
 
 if __name__ == '__main__':
 
@@ -113,18 +119,19 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    args.train_batch_size = [ int(x) for x in args.train_batch_size.split("/") ]
+    args.train_batch_size = [int(x) for x in args.train_batch_size.split("/")]
 
     train_batch_sum = numpy.sum(args.train_batch_size)
 
-    args.train_batch_size = [ int(numpy.ceil(args.batch_size * x / float(train_batch_sum))) for x in args.train_batch_size ]
-    args.train_batch_size = [ 14, 37, 6, 7 ]
+    args.train_batch_size = [int(numpy.ceil(args.batch_size * x / float(train_batch_sum))) for x in
+                             args.train_batch_size]
+    args.train_batch_size = [14, 37, 6, 7]
 
-    args.save_path = "/misc/kcgscratch1/ChoGroup/jasonlee/dl4mt-c2c/models/" # change accordingly
-    args.data_path = "/misc/kcgscratch1/ChoGroup/jasonlee/temp_data/multi-wmt15/" # change accordingly
-    args.dic_path = "/misc/kcgscratch1/ChoGroup/jasonlee/temp_data/multi-wmt15/dic/" # change accordingly
+    args.save_path = "/misc/kcgscratch1/ChoGroup/jasonlee/dl4mt-c2c/models/"  # change accordingly
+    args.data_path = "/misc/kcgscratch1/ChoGroup/jasonlee/temp_data/multi-wmt15/"  # change accordingly
+    args.dic_path = "/misc/kcgscratch1/ChoGroup/jasonlee/temp_data/multi-wmt15/dic/"  # change accordingly
 
-    config_file_name = '/misc/kcgscratch1/ChoGroup/jasonlee/dl4mt-c2c/bpe2char/wmt15_manyen_bpe2char_adam.txt' # change accordingly
+    config_file_name = '/misc/kcgscratch1/ChoGroup/jasonlee/dl4mt-c2c/bpe2char/wmt15_manyen_bpe2char_adam.txt'  # change accordingly
 
     f = open(config_file_name, 'r')
     lines = f.readlines()

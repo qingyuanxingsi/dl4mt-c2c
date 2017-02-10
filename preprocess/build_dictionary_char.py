@@ -6,63 +6,69 @@ import codecs
 
 from collections import OrderedDict
 
-def main(filename, short_list, src):
-    # Build character dictionaries
-    print 'Processing', filename
-    word_freqs = OrderedDict()
 
-    with open(filename, 'r') as f:
+def main(short_list=300, src=False):
+    for filename in sys.argv[1:]:
+        # Build character dictionaries
+        print 'Processing', filename
+        word_freqs = OrderedDict()
 
-        for number, line in enumerate(f):
+        with open(filename, 'r') as f:
 
-            if number % 20000 == 0:
-                print 'line', number
+            for number, line in enumerate(f):
 
-            words_in = line.strip()
-            words_in = list(words_in.decode('utf8'))
+                if number % 20000 == 0:
+                    print 'line', number
 
-            for w in words_in:
-                if w not in word_freqs:
-                    word_freqs[w] = 0
-                word_freqs[w] += 1
+                words_in = line.strip()
+                words_in = list(words_in.decode('utf8'))
 
-    print 'count finished'
+                for w in words_in:
+                    if w not in word_freqs:
+                        word_freqs[w] = 0
+                    word_freqs[w] += 1
 
-    words = word_freqs.keys()
-    freqs = word_freqs.values()
+        print 'count finished'
 
-    sorted_idx = numpy.argsort(freqs)
-    sorted_words = [words[ii] for ii in sorted_idx[::-1]]
+        words = word_freqs.keys()
+        freqs = word_freqs.values()
 
-    worddict = OrderedDict()
-    if src:
-        # 0 -> ZERO
-        # 1 -> UNK
-        # 2 -> SOS
-        # 3 -> EOS
-        tokens = "ZERO UNK SOS EOS".split()
-    else:
-        tokens = "EOS UNK".split()
-    print tokens
+        sorted_idx = numpy.argsort(freqs)
+        sorted_words = [words[ii] for ii in sorted_idx[::-1]]
 
-    for ii, aa in enumerate(tokens):
-        worddict[aa] = ii
-    print worddict
+        worddict = OrderedDict()
+        if src:
+            # 0 -> ZERO
+            # 1 -> UNK
+            # 2 -> SOS
+            # 3 -> EOS
+            tokens = "ZERO UNK SOS EOS".split()
+        else:
+            tokens = "EOS UNK".split()
+        print tokens
 
-    if short_list is not None:
-        for ii in xrange(min(short_list, len(sorted_words))):
-            worddict[sorted_words[ii]] = ii + len(tokens)
-            # NOTE : sorted_words  
-        print 'dict finished'
+        for ii, aa in enumerate(tokens):
+            worddict[aa] = ii
+        print worddict
 
-    else:
-        for ii, ww in enumerate(sorted_words):
-            worddict[ww] = ii + len(tokens)
+        if short_list is not None:
+            for ii in xrange(min(short_list, len(sorted_words))):
+                worddict[sorted_words[ii]] = ii + len(tokens)
+                # NOTE : sorted_words
+            print 'dict finished'
 
-    print 'start dump'
-    with open('%s.%d.pkl' % (filename, short_list+len(tokens)), 'wb') as f:
-        pkl.dump(worddict, f)
+        else:
+            for ii, ww in enumerate(sorted_words):
+                worddict[ww] = ii + len(tokens)
 
-    f.close()
-    print 'Done'
-    print len(worddict)
+        print 'start dump'
+        with open('%s.%d.pkl' % (filename, short_list + len(tokens)), 'wb') as f:
+            pkl.dump(worddict, f)
+
+        f.close()
+        print 'Done'
+        print len(worddict)
+
+
+if __name__ == '__main__':
+    main()

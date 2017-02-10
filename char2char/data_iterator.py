@@ -11,13 +11,16 @@ from tempfile import mkstemp
 
 random.seed(1029381209)
 
+
 def fopen(filename, mode='r'):
     if filename.endswith('.gz'):
         return gzip.open(filename, mode)
     return open(filename, mode)
 
+
 class TextIterator:
     """Simple Bitext iterator."""
+
     def __init__(self,
                  source, source_dict,
                  target=None, target_dict=None,
@@ -86,17 +89,17 @@ class TextIterator:
         fds = [open(ff) for ff in files]
         for l in fds[0]:
             lines = [l.strip()] + [ff.readline().strip() for ff in fds[1:]]
-            print >>tf, "|||".join(lines)
+            print >> tf, "|||".join(lines)
         [ff.close() for ff in fds]
         tf.close()
         tf = open(tpath, 'r')
         lines = tf.readlines()
         random.shuffle(lines)
-        fds = [open(ff+'.reshuf','w') for ff in files]
+        fds = [open(ff + '.reshuf', 'w') for ff in files]
         for l in lines:
             s = l.strip().split('|||')
             for ii, fd in enumerate(fds):
-                print >>fd, s[ii]
+                print >> fd, s[ii]
         [ff.close() for ff in fds]
         os.remove(tpath)
         return
@@ -116,7 +119,7 @@ class TextIterator:
 
         if len(self.source_buffer) == 0:
             for k_ in xrange(self.k):
-                #rand_idx = random.randint(0,len(self.source_buffer))
+                # rand_idx = random.randint(0,len(self.source_buffer))
 
                 ss = self.source.readline()
 
@@ -129,7 +132,7 @@ class TextIterator:
                     ss = ss.strip()
                     ss = list(ss.decode('utf8'))
 
-                #self.source_buffer.insert(rand_idx, ss)
+                # self.source_buffer.insert(rand_idx, ss)
                 self.source_buffer.append(ss)
 
                 if self.target is not None:
@@ -144,7 +147,7 @@ class TextIterator:
                         tt = tt.strip()
                         tt = list(tt.decode('utf8'))
 
-                    #self.target_buffer.insert(rand_idx, tt)
+                    # self.target_buffer.insert(rand_idx, tt)
                     self.target_buffer.append(tt)
 
             if self.target is not None:

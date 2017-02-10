@@ -1,6 +1,7 @@
 import pprint
 import numpy as np
 
+
 def pbatch(source, dic):
     ss = np.transpose(source)
     for line in ss[:10]:

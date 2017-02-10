@@ -6,6 +6,7 @@ import codecs
 
 from collections import OrderedDict
 
+
 def main():
     for filename in sys.argv[1:]:
         print 'Processing', filename
@@ -43,6 +44,7 @@ def main():
         f.close()
         print 'Done'
         print len(worddict)
+
 
 if __name__ == '__main__':
     main()

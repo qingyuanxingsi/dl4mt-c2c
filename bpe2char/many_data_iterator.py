@@ -11,19 +11,22 @@ from tempfile import mkstemp
 
 random.seed(1029381209)
 
+
 def fopen(filename, mode='r'):
     if filename.endswith('.gz'):
         return gzip.open(filename, mode)
     return open(filename, mode)
 
+
 class MultiTextIterator:
     """Simple Bitext iterator."""
+
     def __init__(self,
                  source, source_dict,
                  target=None, target_dict=None,
                  source_word_level=0,
                  target_word_level=0,
-                 batch_size=[128,1,2,3],
+                 batch_size=[128, 1, 2, 3],
                  job_id=0,
                  sort_size=20,
                  n_words_source=302,
@@ -52,8 +55,8 @@ class MultiTextIterator:
         self.n_words_target = n_words_target
         self.shuffle_per_epoch = shuffle_per_epoch
 
-        self.source_buffers = [[],[],[],[]]
-        self.target_buffers = [[],[],[],[]]
+        self.source_buffers = [[], [], [], []]
+        self.target_buffers = [[], [], [], []]
         self.k = [bs * sort_size for bs in batch_size]
         # at once, fetch 20 items
         # we're good for 20 updates
@@ -95,17 +98,17 @@ class MultiTextIterator:
         fds = [open(ff) for ff in files]
         for l in fds[0]:
             lines = [l.strip()] + [ff.readline().strip() for ff in fds[1:]]
-            print >>tf, "|||".join(lines)
+            print >> tf, "|||".join(lines)
         [ff.close() for ff in fds]
         tf.close()
         tf = open(tpath, 'r')
         lines = tf.readlines()
         random.shuffle(lines)
-        fds = [open(ff+'.reshuf','w') for ff in files]
+        fds = [open(ff + '.reshuf', 'w') for ff in files]
         for l in lines:
             s = l.strip().split('|||')
             for ii, fd in enumerate(fds):
-                print >>fd, s[ii]
+                print >> fd, s[ii]
         [ff.close() for ff in fds]
         os.remove(tpath)
         return
@@ -117,8 +120,8 @@ class MultiTextIterator:
             self.reset()
             raise StopIteration
 
-        sources = [[],[],[],[]]
-        targets = [[],[],[],[]]
+        sources = [[], [], [], []]
+        targets = [[], [], [], []]
         # NOTE : this is the data to be used for "this" round of updates
 
         # fill buffer, if it's empty
@@ -129,9 +132,9 @@ class MultiTextIterator:
             # NOTE : in buffer: don't put the whole dataset in... only for 'k' many updates
             # after 'k' updates, self.source_buffers[idx] will be empty, in which case we will put new things in
 
-            #if len(self.source_buffers[idx]) == 0:
+            # if len(self.source_buffers[idx]) == 0:
             if len(self.source_buffers[idx]) < self.batch_sizes[idx]:
-            # NOTE : change this to : if less than one out...
+                # NOTE : change this to : if less than one out...
                 for k_ in xrange(self.k[idx]):
 
                     ss = self.sources[idx].readline()
@@ -176,7 +179,7 @@ class MultiTextIterator:
             # actual work here
             for idx in xrange(4):
                 while True:
-                # read from source file and map to word index
+                    # read from source file and map to word index
                     try:
                         ss_ = self.source_buffers[idx].pop()
                     except IndexError:

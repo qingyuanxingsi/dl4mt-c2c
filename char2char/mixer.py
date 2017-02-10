@@ -1,6 +1,6 @@
-'''
+"""
 Mixer containing essential functions or building blocks
-'''
+"""
 import theano
 import theano.tensor as tensor
 from theano.ifelse import ifelse
@@ -19,6 +19,8 @@ import time
 
 from collections import OrderedDict
 
+# TODO: Fix Errors
+
 profile = False
 rng = numpy.random.RandomState(23455)
 
@@ -29,7 +31,8 @@ layers = {'ff': ('param_init_fflayer', 'fflayer'),
 
           'hw': ('param_init_hwlayer', 'hwlayer'),
 
-          'hw_small': ('param_init_small_hwlayer', 'small_hwlayer'), # a smaller highway network with only the identity term, essentially throwing out the MLP term.
+          'hw_small': ('param_init_small_hwlayer', 'small_hwlayer'),
+          # a smaller highway network with only the identity term, essentially throwing out the MLP term.
 
           'gru_decoder': ('param_init_gru_decoder', 'gru_decoder'),
 
@@ -55,24 +58,27 @@ layers = {'ff': ('param_init_fflayer', 'fflayer'),
 
           'two_layer_gru': ('param_init_two_layer_gru', 'two_layer_gru'),
 
-          'lngru': ('param_init_lngru', 'lngru_layer'), # layer normalised GRU
+          'lngru': ('param_init_lngru', 'lngru_layer'),  # layer normalised GRU
 
-          'conv_encoder': ('param_init_conv', 'conv_encoder'), # a single-layer ConvNet with a fixed filter width
+          'conv_encoder': ('param_init_conv', 'conv_encoder'),  # a single-layer ConvNet with a fixed filter width
 
-          'multi_scale_conv_encoder': ('param_init_multi_scale_conv', 'multi_scale_conv_encoder'), # a single-layer ConvNet with mixed conv. filters
+          'multi_scale_conv_encoder': ('param_init_multi_scale_conv', 'multi_scale_conv_encoder'),
+          # a single-layer ConvNet with mixed conv. filters
           }
+
 
 def ln(x, b, s):
     _eps = 1e-5
-    output = (x - x.mean(1)[:,None]) / tensor.sqrt((x.var(1)[:,None] + _eps))
-    output = s[None, :] * output + b[None,:]
+    output = (x - x.mean(1)[:, None]) / tensor.sqrt((x.var(1)[:, None] + _eps))
+    output = s[None, :] * output + b[None, :]
     return output
+
 
 # utility function to slice a tensor
 def _slice(_x, n, dim):
     if _x.ndim == 3:
-        return _x[:, :, n*dim:(n+1)*dim]
-    return _x[:, n*dim:(n+1)*dim]
+        return _x[:, :, n * dim:(n + 1) * dim]
+    return _x[:, n * dim:(n + 1) * dim]
 
 
 # push parameters to Theano shared variables
@@ -93,6 +99,7 @@ def unzip(zipped):
 def itemlist(tparams):
     return [vv for kk, vv in tparams.iteritems()]
 
+
 # dropout
 def dropout_layer(state_before, use_noise, trng):
     proj = tensor.switch(
@@ -101,6 +108,7 @@ def dropout_layer(state_before, use_noise, trng):
                                      dtype=state_before.dtype),
         state_before * 0.5)
     return proj
+
 
 # make prefix-appended name
 def _p(pp, name):
@@ -131,6 +139,7 @@ def get_layer(name):
     fns = layers[name]
     return (eval(fns[0]), eval(fns[1]))
 
+
 # some utilities
 def ortho_weight(ndim, scale=0.01):
     W = scale * numpy.random.randn(ndim, ndim)
@@ -152,11 +161,14 @@ def norm_weight(nin, nout=None, scale=0.01, ortho=True):
         W = scale * numpy.random.randn(nin, nout)
     return W.astype('float32')
 
+
 def tanh(x):
     return tensor.tanh(x)
 
+
 def linear(x):
     return x
+
 
 def concatenate(tensor_list, axis=0):
     """
@@ -222,6 +234,7 @@ def fflayer(tparams, state_below, options, prefix='rconv',
         tensor.dot(state_below, tparams[_p(prefix, 'W')]) +
         tparams[_p(prefix, 'b')])
 
+
 def param_init_hwlayer(options, params, prefix='hw', dim=None):
     param_init_fflayer(options, params, prefix, dim, dim)
     params[_p(prefix, 'W_t')] = ortho_weight(dim)
@@ -229,26 +242,29 @@ def param_init_hwlayer(options, params, prefix='hw', dim=None):
 
     return params
 
+
 # highway network
 def param_init_small_hwlayer(options, params, prefix='small_hw', dim=None):
-    #param_init_fflayer(options, params, prefix, dim, dim)
+    # param_init_fflayer(options, params, prefix, dim, dim)
     params[_p(prefix, 'W_t')] = ortho_weight(dim)
     params[_p(prefix, 'b_t')] = numpy.zeros((dim,)).astype('float32')
 
     return params
 
+
 def small_hwlayer(tparams, state_below, options, prefix='small_hw', **kwargs):
-    #W = tparams[_p(prefix, 'W')]
-    #b = tparams[_p(prefix, 'b')]
+    # W = tparams[_p(prefix, 'W')]
+    # b = tparams[_p(prefix, 'b')]
     W_t = tparams[_p(prefix, 'W_t')]
     b_t = tparams[_p(prefix, 'b_t')]
     bias = -2.0
-    #output = tensor.nnet.relu( tensor.dot(state_below, W) + b )
-    transform = tensor.nnet.sigmoid( bias + tensor.dot(state_below, W_t) + b_t )
+    # output = tensor.nnet.relu( tensor.dot(state_below, W) + b )
+    transform = tensor.nnet.sigmoid(bias + tensor.dot(state_below, W_t) + b_t)
     # state_below : maxlen/width X n_samples X dim_word_src
 
-    #return output*transform + state_below*(1.0 - transform)
-    return state_below*(1.0 - transform)
+    # return output*transform + state_below*(1.0 - transform)
+    return state_below * (1.0 - transform)
+
 
 def hwlayer(tparams, state_below, options, prefix='hw', **kwargs):
     W = tparams[_p(prefix, 'W')]
@@ -256,11 +272,12 @@ def hwlayer(tparams, state_below, options, prefix='hw', **kwargs):
     W_t = tparams[_p(prefix, 'W_t')]
     b_t = tparams[_p(prefix, 'b_t')]
     bias = -2.0
-    output = tensor.nnet.relu( tensor.dot(state_below, W) + b )
-    transform = tensor.nnet.sigmoid( bias + tensor.dot(state_below, W_t) + b_t )
+    output = tensor.nnet.relu(tensor.dot(state_below, W) + b)
+    transform = tensor.nnet.sigmoid(bias + tensor.dot(state_below, W_t) + b_t)
     # state_below : maxlen/width X n_samples X dim_word_src
 
-    return output*transform + state_below*(1.0 - transform)
+    return output * transform + state_below * (1.0 - transform)
+
 
 # feedforward layer short-cut: affine transformation + point-wise nonlinearity
 def param_init_ffflayer(options, params, prefix='fff', nin1=None, nin2=None, nout=None,
@@ -285,18 +302,18 @@ def ffflayer(tparams, state_below1, state_below2, options, prefix='rconv',
         tensor.dot(state_below2, tparams[_p(prefix, 'U')]) +
         tparams[_p(prefix, 'b')])
 
-def grconv_encoder_step(step, state_below, Wl, Wr, bW, Gl, Gr, bG):
 
+def grconv_encoder_step(step, state_below, Wl, Wr, bW, Gl, Gr, bG):
     assert state_below.ndim == 3
     dim = state_below.shape[2]
 
     Wl = _slice(Wl, step, dim)
     Wr = _slice(Wr, step, dim)
-    bW = bW[step*dim:(step+1)*dim]
+    bW = bW[step * dim:(step + 1) * dim]
 
     Gl = _slice(Gl, step, 3)
     Gr = _slice(Gr, step, 3)
-    bG = bG[step*3:(step+1)*3]
+    bG = bG[step * 3:(step + 1) * 3]
 
     state_below_r = state_below
     # state_below : maxlen X n_samples X dim_word_src
@@ -313,49 +330,49 @@ def grconv_encoder_step(step, state_below, Wl, Wr, bW, Gl, Gr, bG):
     gater = tensor.dot(state_below_l, Gl) + tensor.dot(state_below_r, Gr) + bG
 
     gater_shape = gater.shape
-    gater = gater.reshape((gater_shape[0]*gater_shape[1], 3))
+    gater = gater.reshape((gater_shape[0] * gater_shape[1], 3))
 
     gater = tensor.nnet.softmax(gater)
 
     gater = gater.reshape((gater_shape[0], gater_shape[1], 3))
 
-    gater_new = gater[:,:,0].dimshuffle(0,1,'x')
-    gater_left = gater[:,:,1].dimshuffle(0,1,'x')
-    gater_right = gater[:,:,2].dimshuffle(0,1,'x')
+    gater_new = gater[:, :, 0].dimshuffle(0, 1, 'x')
+    gater_left = gater[:, :, 1].dimshuffle(0, 1, 'x')
+    gater_right = gater[:, :, 2].dimshuffle(0, 1, 'x')
 
     act = new_act * gater_new + state_below_l * gater_left + state_below_r * gater_right
 
     # NOTE : mask here?
     return act
 
+
 # convolution layer
 def param_init_conv(options, params, prefix='conv_enc', dim=None, width=None, nkernels=None):
-
     w_shp = (nkernels, dim, width, 1)
     w_bound = numpy.sqrt(dim * width * 1)
     convW = numpy.asarray(
-                        rng.uniform(
-                            low=-1.0 / w_bound,
-                            high=1.0 / w_bound,
-                            size=w_shp),
-                        dtype=numpy.float32,
-                )
+        rng.uniform(
+            low=-1.0 / w_bound,
+            high=1.0 / w_bound,
+            size=w_shp),
+        dtype=numpy.float32,
+    )
 
     params[_p(prefix, 'convW')] = convW
 
     b_shp = (nkernels,)
     convB = numpy.asarray(
-                rng.uniform(low=-.5, high=.5, size=b_shp),
-                dtype=numpy.float32,
-                )
+        rng.uniform(low=-.5, high=.5, size=b_shp),
+        dtype=numpy.float32,
+    )
 
     params[_p(prefix, 'convB')] = convB
 
     return params
 
+
 # GRU layer
 def param_init_gru(options, params, prefix='gru', nin=None, dim=None):
-
     if nin is None:
         nin = options['dim_proj']
         # nin = dim_word_src
@@ -388,8 +405,10 @@ def param_init_gru(options, params, prefix='gru', nin=None, dim=None):
 
     return params
 
+
 def conv_encoder(tparams, state_below, options, prefix='conv_enc',
-          one_step=False, init_state=None, width=None, nkernels=None, pool_window=None, pool_stride=None, **kwargs):
+                 one_step=False, init_state=None, width=None, nkernels=None, pool_window=None, pool_stride=None,
+                 **kwargs):
     # state_below : maxlen X n_samples X dim_word_src
     # mask : maxlen X n_samples
     # data = (n_samples, dim, maxlen, 1)
@@ -399,29 +418,29 @@ def conv_encoder(tparams, state_below, options, prefix='conv_enc',
     n_samples = state_below.shape[1]
     dim = state_below.shape[2]
 
-    data = state_below.dimshuffle(1,2,0,'x')
+    data = state_below.dimshuffle(1, 2, 0, 'x')
     # data : n_samples X dim X maxlen X 1
 
     W = tparams[_p(prefix, 'convW')]
     b = tparams[_p(prefix, 'convB')]
 
-    #conv_out = dnn_conv(data, W, border_mode='valid', subsample=(stride,1), precision='float32')
+    # conv_out = dnn_conv(data, W, border_mode='valid', subsample=(stride,1), precision='float32')
     output = dnn_conv(data, W, border_mode='half', precision='float32')
-    #conv_out = conv2d(data, W, border_mode='valid')
-    #conv_out = conv2d(data, W, input_shape=(8, 256, 450, 1), filter_shape=(64, 1, 4, 1), border_mode='valid')
+    # conv_out = conv2d(data, W, border_mode='valid')
+    # conv_out = conv2d(data, W, input_shape=(8, 256, 450, 1), filter_shape=(64, 1, 4, 1), border_mode='valid')
 
     if curr_width % 2 == 0:
-        output = output[:,:,:-1,:]
+        output = output[:, :, :-1, :]
 
-    output = tensor.nnet.relu(output + b.dimshuffle('x',0,'x','x'))
+    output = tensor.nnet.relu(output + b.dimshuffle('x', 0, 'x', 'x'))
 
     output = dnn_pool(output, (pool_window, 1), stride=(pool_stride, 1), mode='max', pad=(0, 0))
 
-    #output = tensor.nnet.sigmoid(conv_out)
+    # output = tensor.nnet.sigmoid(conv_out)
     # output : n_samples X nkernels X (maxlen-width+1) X 1
 
-    #output = output.dimshuffle(2,0,1,3).squeeze()
-    output = output.dimshuffle(2,0,1,3)[:,:,:,0]
+    # output = output.dimshuffle(2,0,1,3).squeeze()
+    output = output.dimshuffle(2, 0, 1, 3)[:, :, :, 0]
     # NOTE : when we pass 1 or 2 instead of 0, get IndexError: index out of bounds
     # not sure why squeeze wouldn't work though
 
@@ -430,67 +449,78 @@ def conv_encoder(tparams, state_below, options, prefix='conv_enc',
     return output
     # emb : maxlen X n_samples X dim_word_src
 
-def param_init_multi_scale_conv(options, params, prefix='conv_enc', dim=None, width=None, nkernels=None):
 
+def param_init_multi_scale_conv(options, params, prefix='conv_enc', dim=None, width=None, nkernels=None):
     # we have nkernels[0] many kernels of width width[0], nkernels[1] many kernels of width width[1], and so on.
     assert len(width) == len(nkernels)
 
+    # n_kernels, dim, width, 1
     w_shp = [(n, dim, w, 1) for (w, n) in zip(width, nkernels)]
     w_bound = [numpy.sqrt(dim * w * 1) for w in width]
 
-    convW = [ # weights sampled uniformly from [-1/fan_in, 1/fan_in], where fan_in is the number of inputs to a hidden unit.
-                numpy.asarray(
-                            rng.uniform(
-                                low=-1.0 / bound,
-                                high=1.0 / bound,
-                                size=shp),
-                            dtype=numpy.float32,
-                    )
-                for (shp, bound) in zip(w_shp, w_bound)
-            ]
+    convW = [
+        # weights sampled uniformly from [-1/fan_in, 1/fan_in], where fan_in is the number of inputs to a hidden unit.
+        numpy.asarray(
+            rng.uniform(
+                low=-1.0 / bound,
+                high=1.0 / bound,
+                size=shp),
+            dtype=numpy.float32,
+        )
+        for (shp, bound) in zip(w_shp, w_bound)
+        ]
 
     for idx in range(len(convW)):
-        params[_p(prefix, 'convW')+str(idx)] = convW[idx]
+        params[_p(prefix, 'convW') + str(idx)] = convW[idx]
 
     b_shp = [(nk,) for nk in nkernels]
 
     convB = [
-                numpy.asarray(
-                    rng.uniform(low=-.5, high=.5, size=shp),
-                    dtype=numpy.float32,
-                    )
-                for shp in b_shp
-            ]
+        numpy.asarray(
+            rng.uniform(low=-.5, high=.5, size=shp),
+            dtype=numpy.float32,
+        )
+        for shp in b_shp
+        ]
 
     for idx in range(len(convW)):
-        params[_p(prefix, 'convB')+str(idx)] = convB[idx]
+        params[_p(prefix, 'convB') + str(idx)] = convB[idx]
 
     return params
 
+
 def multi_scale_conv_encoder(tparams, state_below, options, prefix='conv_enc',
-              one_step=False, init_state=None, width=None, nkernels=None, pool_window=None, pool_stride=None, **kwargs):
+                             one_step=False, init_state=None, width=None, nkernels=None, pool_window=None,
+                             pool_stride=None, **kwargs):
     # state_below.shape = (maxlen_x_pad + 2*pool_stride, n_samples, dim_word_src)
     # mask.shape = (maxlen_x_pad/pool_stride, n_samples)
     assert len(width) == len(nkernels)
 
-    data = state_below.dimshuffle(1,2,0,'x')
+    data = state_below.dimshuffle(1, 2, 0, 'x')
     # data.shape = (n_samples, dim_word_src, maxlen_x_pad + 2*pool_stride, 1)
 
-    W = [tparams[_p(prefix, 'convW')+str(idx)] for idx in range(len(width))]
-    b = [tparams[_p(prefix, 'convB')+str(idx)] for idx in range(len(width))]
+    W = [tparams[_p(prefix, 'convW') + str(idx)] for idx in range(len(width))]
+    b = [tparams[_p(prefix, 'convB') + str(idx)] for idx in range(len(width))]
 
     output = []
 
     for idx in range(len(width)):
         curr_width = width[idx]
 
+        # n_samples, dim, maxlen_x_pad + 2*pool_stride, 1
+        # n_kernels, dim, width, 1
+        # n_samples n_kernels, output rows, output columns
         output.append(dnn_conv(data, W[idx], border_mode='half', precision='float32'))
         # output[idx].shape = (n_samples, nkernels[idx], (maxlen_x_pad + 2*pool_stride), 1)
 
+        # for filters with an even numbered width,
+        # half convolution yields an output whose length is 1 longer than the input,
+        # hence discarding the last one here. For more detail, consult:
+        # http://deeplearning.net/software/theano/library/tensor/nnet/conv.html#theano.tensor.nnet.conv2d
         if curr_width % 2 == 0:
-            output[idx] = (output[idx])[:,:,:-1,:] # for filters with an even numbered width, half convolution yields an output whose length is 1 longer than the input, hence discarding the last one here. For more detail, consult http://deeplearning.net/software/theano/library/tensor/nnet/conv.html#theano.tensor.nnet.conv2d
+            output[idx] = (output[idx])[:, :, :-1, :]
 
-        output[idx] = tensor.nnet.relu(output[idx] + b[idx].dimshuffle('x',0,'x','x'))
+        output[idx] = tensor.nnet.relu(output[idx] + b[idx].dimshuffle('x', 0, 'x', 'x'))
 
     result = tensor.concatenate(output, axis=1)
     # result.shape = (n_samples, sum(nkernels), (maxlen_x_pad + 2*pool_stride), 1)
@@ -498,15 +528,16 @@ def multi_scale_conv_encoder(tparams, state_below, options, prefix='conv_enc',
     result = dnn_pool(result, (pool_window, 1), stride=(pool_stride, 1), mode='max', pad=(0, 0))
     # result.shape = (n_samples, sum(nkernels), (maxlen_x_pad/pool_stride + 2), 1)
 
-    result = result.dimshuffle(2,0,1,3)[1:-1,:,:,0]
+    # n_steps * n_samples * dim * 1
+    result = result.dimshuffle(2, 0, 1, 3)[1:-1, :, :, 0]
     # We get rid of the first and the last result and shuffle.
     # result.shape = (maxlen_x_pad/pool_stride, n_samples, sum(nkernels))
 
     return result
 
+
 def gru_layer(tparams, state_below, options, prefix='gru',
               mask=None, one_step=False, init_state=None, **kwargs):
-
     if one_step:
         assert init_state, 'previous state must be provided'
 
@@ -514,7 +545,7 @@ def gru_layer(tparams, state_below, options, prefix='gru',
     if state_below.ndim in [2, 3]:
         n_samples = state_below.shape[1]
     elif state_below.ndim == 1:
-        if not  one_step:
+        if not one_step:
             raise ValueError('if state_below.ndim is 1, one_step shoud also be 1')
     else:
         n_samples = 1
@@ -542,14 +573,14 @@ def gru_layer(tparams, state_below, options, prefix='gru',
         # b             : 2*enc_dim
         # bx            : enc_dim
         state_below_ = tensor.dot(state_below, tparams[_p(prefix, 'W')]) + \
-            tparams[_p(prefix, 'b')]
+                       tparams[_p(prefix, 'b')]
         state_belowx = tensor.dot(state_below, tparams[_p(prefix, 'Wx')]) + \
-            tparams[_p(prefix, 'bx')]
+                       tparams[_p(prefix, 'bx')]
 
     # state_below_ :    maxlen X n_samples X 2*enc_dim
     # state_belowx :    maxlen X n_samples X enc_dim
     # mask :            maxlen X n_samples
-        
+
     # initial/previous state
     if init_state is None:
         init_state = tensor.alloc(0., n_samples, dim)
@@ -596,7 +627,7 @@ def gru_layer(tparams, state_below, options, prefix='gru',
                    tparams[_p(prefix, 'Ux')]]
 
     if one_step:
-        rval = _step(*(seqs+[init_state]+shared_vars))
+        rval = _step(*(seqs + [init_state] + shared_vars))
     else:
         rval, updates = theano.scan(_step,
                                     sequences=seqs,
@@ -609,8 +640,8 @@ def gru_layer(tparams, state_below, options, prefix='gru',
 
     return rval
 
-def param_init_two_layer_gru(options, params, prefix='two_layer_gru', nin=None, dim1=None, dim2=None):
 
+def param_init_two_layer_gru(options, params, prefix='two_layer_gru', nin=None, dim1=None, dim2=None):
     if nin is None:
         nin = options['dim_proj']
     if dim1 is None:
@@ -619,12 +650,12 @@ def param_init_two_layer_gru(options, params, prefix='two_layer_gru', nin=None, 
         dim2 = options['rnn_dim']
 
     W1 = numpy.concatenate([norm_weight(nin, dim1),
-                           norm_weight(nin, dim1)], axis=1)
+                            norm_weight(nin, dim1)], axis=1)
     params[_p(prefix, 'W1')] = W1
     params[_p(prefix, 'b1')] = numpy.zeros((2 * dim1,)).astype('float32')
 
     U1 = numpy.concatenate([ortho_weight(dim1),
-                           ortho_weight(dim1)], axis=1)
+                            ortho_weight(dim1)], axis=1)
     params[_p(prefix, 'U1')] = U1
 
     Wx1 = norm_weight(nin, dim1)
@@ -635,12 +666,12 @@ def param_init_two_layer_gru(options, params, prefix='two_layer_gru', nin=None, 
     params[_p(prefix, 'Ux1')] = Ux1
 
     W2 = numpy.concatenate([norm_weight(dim1, dim2),
-                           norm_weight(dim1, dim2)], axis=1)
+                            norm_weight(dim1, dim2)], axis=1)
     params[_p(prefix, 'W2')] = W2
     params[_p(prefix, 'b2')] = numpy.zeros((2 * dim2,)).astype('float32')
 
     U2 = numpy.concatenate([ortho_weight(dim2),
-                           ortho_weight(dim2)], axis=1)
+                            ortho_weight(dim2)], axis=1)
     params[_p(prefix, 'U2')] = U2
 
     Wx2 = norm_weight(dim1, dim2)
@@ -652,8 +683,9 @@ def param_init_two_layer_gru(options, params, prefix='two_layer_gru', nin=None, 
 
     return params
 
-def two_layer_gru(tparams, state_below, options, prefix='two_layer_gru', mask=None, one_step=False, init_state1=None, init_state2=None, **kwargs):
 
+def two_layer_gru(tparams, state_below, options, prefix='two_layer_gru', mask=None, one_step=False, init_state1=None,
+                  init_state2=None, **kwargs):
     if one_step:
         assert init_state, 'previous state must be provided'
 
@@ -661,7 +693,7 @@ def two_layer_gru(tparams, state_below, options, prefix='two_layer_gru', mask=No
     if state_below.ndim in [2, 3]:
         n_samples = state_below.shape[1]
     elif state_below.ndim == 1:
-        if not  one_step:
+        if not one_step:
             raise ValueError('if state_below.ndim is 1, one_step shoud also be 1')
     else:
         n_samples = 1
@@ -684,10 +716,10 @@ def two_layer_gru(tparams, state_below, options, prefix='two_layer_gru', mask=No
     else:
         # projected x to hidden state proposal
         state_below_ = tensor.dot(state_below, tparams[_p(prefix, 'W1')]) + \
-            tparams[_p(prefix, 'b1')]
+                       tparams[_p(prefix, 'b1')]
         # projected x to gates
         state_belowx = tensor.dot(state_below, tparams[_p(prefix, 'Wx1')]) + \
-            tparams[_p(prefix, 'bx1')]
+                       tparams[_p(prefix, 'bx1')]
 
     # initial/previous state
     if init_state1 is None:
@@ -754,10 +786,10 @@ def two_layer_gru(tparams, state_below, options, prefix='two_layer_gru', mask=No
                    tparams[_p(prefix, 'Wx2')],
                    tparams[_p(prefix, 'bx2')],
                    tparams[_p(prefix, 'Ux2')],
-                  ]
+                   ]
 
     if one_step:
-        rval = _step(*(seqs+[init_state]+shared_vars))
+        rval = _step(*(seqs + [init_state] + shared_vars))
     else:
         rval, updates = theano.scan(_step,
                                     sequences=seqs,
@@ -770,6 +802,7 @@ def two_layer_gru(tparams, state_below, options, prefix='two_layer_gru', mask=No
 
     return rval
 
+
 # LN-GRU layer
 def param_init_lngru(options, params, prefix='lngru', nin=None, dim=None):
     """
@@ -780,32 +813,33 @@ def param_init_lngru(options, params, prefix='lngru', nin=None, dim=None):
     if dim == None:
         dim = options['dim_proj']
 
-    W = numpy.concatenate([norm_weight(nin,dim), norm_weight(nin,dim)], axis=1)
-    params[_p(prefix,'W')] = W
-    params[_p(prefix,'b')] = numpy.zeros((2 * dim,)).astype('float32')
+    W = numpy.concatenate([norm_weight(nin, dim), norm_weight(nin, dim)], axis=1)
+    params[_p(prefix, 'W')] = W
+    params[_p(prefix, 'b')] = numpy.zeros((2 * dim,)).astype('float32')
     U = numpy.concatenate([ortho_weight(dim),
                            ortho_weight(dim)], axis=1)
-    params[_p(prefix,'U')] = U
+    params[_p(prefix, 'U')] = U
 
     Wx = norm_weight(nin, dim)
-    params[_p(prefix,'Wx')] = Wx
+    params[_p(prefix, 'Wx')] = Wx
     Ux = ortho_weight(dim)
-    params[_p(prefix,'Ux')] = Ux
-    params[_p(prefix,'bx')] = numpy.zeros((dim,)).astype('float32')
+    params[_p(prefix, 'Ux')] = Ux
+    params[_p(prefix, 'bx')] = numpy.zeros((dim,)).astype('float32')
 
     # LN parameters
     scale_add = 0.0
     scale_mul = 1.0
-    params[_p(prefix,'b1')] = scale_add * numpy.ones((2*dim)).astype('float32')
-    params[_p(prefix,'b2')] = scale_add * numpy.ones((1*dim)).astype('float32')
-    params[_p(prefix,'b3')] = scale_add * numpy.ones((2*dim)).astype('float32')
-    params[_p(prefix,'b4')] = scale_add * numpy.ones((1*dim)).astype('float32')
-    params[_p(prefix,'s1')] = scale_mul * numpy.ones((2*dim)).astype('float32')
-    params[_p(prefix,'s2')] = scale_mul * numpy.ones((1*dim)).astype('float32')
-    params[_p(prefix,'s3')] = scale_mul * numpy.ones((2*dim)).astype('float32')
-    params[_p(prefix,'s4')] = scale_mul * numpy.ones((1*dim)).astype('float32')
+    params[_p(prefix, 'b1')] = scale_add * numpy.ones((2 * dim)).astype('float32')
+    params[_p(prefix, 'b2')] = scale_add * numpy.ones((1 * dim)).astype('float32')
+    params[_p(prefix, 'b3')] = scale_add * numpy.ones((2 * dim)).astype('float32')
+    params[_p(prefix, 'b4')] = scale_add * numpy.ones((1 * dim)).astype('float32')
+    params[_p(prefix, 's1')] = scale_mul * numpy.ones((2 * dim)).astype('float32')
+    params[_p(prefix, 's2')] = scale_mul * numpy.ones((1 * dim)).astype('float32')
+    params[_p(prefix, 's3')] = scale_mul * numpy.ones((2 * dim)).astype('float32')
+    params[_p(prefix, 's4')] = scale_mul * numpy.ones((1 * dim)).astype('float32')
 
     return params
+
 
 def lngru_layer(tparams, state_below, options, prefix='lngru',
                 mask=None, one_step=False, init_state=None, **kwargs):
@@ -818,7 +852,7 @@ def lngru_layer(tparams, state_below, options, prefix='lngru',
     else:
         n_samples = 1
 
-    dim = tparams[_p(prefix,'Ux')].shape[1]
+    dim = tparams[_p(prefix, 'Ux')].shape[1]
 
     if init_state == None:
         init_state = tensor.alloc(0., n_samples, dim)
@@ -828,8 +862,8 @@ def lngru_layer(tparams, state_below, options, prefix='lngru',
 
     def _slice(_x, n, dim):
         if _x.ndim == 3:
-            return _x[:, :, n*dim:(n+1)*dim]
-        return _x[:, n*dim:(n+1)*dim]
+            return _x[:, :, n * dim:(n + 1) * dim]
+        return _x[:, n * dim:(n + 1) * dim]
 
     state_below_ = tensor.dot(state_below, tparams[_p(prefix, 'W')]) + tparams[_p(prefix, 'b')]
     state_belowx = tensor.dot(state_below, tparams[_p(prefix, 'Wx')]) + tparams[_p(prefix, 'bx')]
@@ -856,7 +890,7 @@ def lngru_layer(tparams, state_below, options, prefix='lngru',
         h = tensor.tanh(preactx)
 
         h = u * h_ + (1. - u) * h
-        h = m_[:,None] * h + (1. - m_)[:,None] * h_
+        h = m_[:, None] * h + (1. - m_)[:, None] * h_
 
         return h
 
@@ -864,23 +898,26 @@ def lngru_layer(tparams, state_below, options, prefix='lngru',
     _step = _step_slice
 
     non_seqs = [tparams[_p(prefix, 'U')], tparams[_p(prefix, 'Ux')]]
-    non_seqs += [tparams[_p(prefix, 'b1')], tparams[_p(prefix, 'b2')], tparams[_p(prefix, 'b3')], tparams[_p(prefix, 'b4')]]
-    non_seqs += [tparams[_p(prefix, 's1')], tparams[_p(prefix, 's2')], tparams[_p(prefix, 's3')], tparams[_p(prefix, 's4')]]
+    non_seqs += [tparams[_p(prefix, 'b1')], tparams[_p(prefix, 'b2')], tparams[_p(prefix, 'b3')],
+                 tparams[_p(prefix, 'b4')]]
+    non_seqs += [tparams[_p(prefix, 's1')], tparams[_p(prefix, 's2')], tparams[_p(prefix, 's3')],
+                 tparams[_p(prefix, 's4')]]
 
     if one_step:
-        rval = _step(*(seqs+[init_state, tparams[_p(prefix, 'U')], tparams[_p(prefix, 'Ux')]]))
+        rval = _step(*(seqs + [init_state, tparams[_p(prefix, 'U')], tparams[_p(prefix, 'Ux')]]))
 
     else:
         rval, updates = theano.scan(_step,
                                     sequences=seqs,
-                                    outputs_info = [init_state],
-                                    non_sequences = non_seqs,
+                                    outputs_info=[init_state],
+                                    non_sequences=non_seqs,
                                     name=_p(prefix, '_layers'),
                                     n_steps=nsteps,
                                     profile=False,
                                     strict=True)
-    #rval = [rval]
+    # rval = [rval]
     return rval
+
 
 # Conditional GRU layer without Attention
 def param_init_gru_decoder(options, params, prefix='gru_decoder', nin=None,
@@ -895,7 +932,7 @@ def param_init_gru_decoder(options, params, prefix='gru_decoder', nin=None,
     params = param_init_gru(options, params, prefix, nin=nin, dim=dim)
 
     # context to GRU gates
-    Wc = norm_weight(dimctx, dim*2)
+    Wc = norm_weight(dimctx, dim * 2)
     params[_p(prefix, 'Wc')] = Wc
 
     # context to hidden proposal
@@ -908,7 +945,6 @@ def param_init_gru_decoder(options, params, prefix='gru_decoder', nin=None,
 def gru_decoder(tparams, state_below, options, prefix='gru_decoder',
                 mask=None, context=None, one_step=False,
                 init_state=None, **kwargs):
-
     assert context, 'Context must be provided'
 
     if one_step:
@@ -938,14 +974,14 @@ def gru_decoder(tparams, state_below, options, prefix='gru_decoder',
 
     # projected x to hidden state proposal
     state_below_ = tensor.dot(state_below, tparams[_p(prefix, 'W')]) + \
-        tparams[_p(prefix, 'b')]
+                   tparams[_p(prefix, 'b')]
     # projected x to gates
     state_belowx = tensor.dot(state_below, tparams[_p(prefix, 'Wx')]) + \
-        tparams[_p(prefix, 'bx')]
+                   tparams[_p(prefix, 'bx')]
 
     # step function to be used by scan
     # arguments    | sequences | outputs-info| non-seqs
-    def _step(m_, x_, xx_, h_,          pctx_, pctxx_, U, Ux):
+    def _step(m_, x_, xx_, h_, pctx_, pctxx_, U, Ux):
         preact = tensor.dot(h_, U)
         preact += x_
         preact += pctx_
@@ -969,6 +1005,7 @@ def gru_decoder(tparams, state_below, options, prefix='gru_decoder',
         h = m_[:, None] * h + (1. - m_)[:, None] * h_
 
         return h
+
     # prepare scan arguments
 
     seqs = [mask, state_below_, state_belowx]
@@ -977,12 +1014,12 @@ def gru_decoder(tparams, state_below, options, prefix='gru_decoder',
                    tparams[_p(prefix, 'Ux')]]
 
     if one_step:
-        rval = _step(*(seqs+[init_state, pctx_, pctxx_]+shared_vars))
+        rval = _step(*(seqs + [init_state, pctx_, pctxx_] + shared_vars))
     else:
         rval, updates = theano.scan(_step,
                                     sequences=seqs,
                                     outputs_info=[init_state],
-                                    non_sequences=[pctx_, pctxx_]+shared_vars,
+                                    non_sequences=[pctx_, pctxx_] + shared_vars,
                                     name=_p(prefix, '_layers'),
                                     n_steps=n_steps,
                                     profile=profile,
@@ -1003,7 +1040,7 @@ def param_init_gru_cond_decoder(options, params, prefix='gru_cond_decoder',
     params = param_init_gru(options, params, prefix, nin=nin, dim=dim)
 
     # context to LSTM
-    Wc = norm_weight(dimctx, dim*2)
+    Wc = norm_weight(dimctx, dim * 2)
     params[_p(prefix, 'Wc')] = Wc
 
     Wcx = norm_weight(dimctx, dim)
@@ -1037,7 +1074,6 @@ def param_init_gru_cond_decoder(options, params, prefix='gru_cond_decoder',
 def gru_cond_decoder(tparams, state_below, options, prefix='gru_cond_decoder',
                      mask=None, context=None, one_step=False, init_state=None,
                      context_mask=None, **kwargs):
-
     assert context, 'Context must be provided'
     assert context.ndim == 3, \
         'Context must be 3-d: #annotation x #sample x dim'
@@ -1063,19 +1099,19 @@ def gru_cond_decoder(tparams, state_below, options, prefix='gru_cond_decoder',
 
     # projected context
     pctx_ = tensor.dot(context, tparams[_p(prefix, 'Wc_att')]) + \
-        tparams[_p(prefix, 'b_att')]
+            tparams[_p(prefix, 'b_att')]
 
     def _slice(_x, n, dim):
         if _x.ndim == 3:
-            return _x[:, :, n*dim:(n+1)*dim]
-        return _x[:, n*dim:(n+1)*dim]
+            return _x[:, :, n * dim:(n + 1) * dim]
+        return _x[:, n * dim:(n + 1) * dim]
 
     # projected x into hidden state proposal
     state_belowx = tensor.dot(state_below, tparams[_p(prefix, 'Wx')]) + \
-        tparams[_p(prefix, 'bx')]
+                   tparams[_p(prefix, 'bx')]
     # projected x into gru gates
     state_below_ = tensor.dot(state_below, tparams[_p(prefix, 'W')]) + \
-        tparams[_p(prefix, 'b')]
+                   tparams[_p(prefix, 'b')]
     # projected x into attention module
     state_belowc = tensor.dot(state_below, tparams[_p(prefix, 'Wi_att')])
 
@@ -1096,7 +1132,7 @@ def gru_cond_decoder(tparams, state_below, options, prefix='gru_cond_decoder',
         pctx__ = tensor.tanh(pctx__)
 
         # compute alignment weights
-        alpha = tensor.dot(pctx__, U_att)+c_tt
+        alpha = tensor.dot(pctx__, U_att) + c_tt
         alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
         alpha = tensor.exp(alpha - alpha.max(0))
         if context_mask:
@@ -1141,7 +1177,7 @@ def gru_cond_decoder(tparams, state_below, options, prefix='gru_cond_decoder',
 
     if one_step:
         rval = _step(*(
-            seqs+[init_state, None, None, pctx_, context]+shared_vars))
+            seqs + [init_state, None, None, pctx_, context] + shared_vars))
     else:
         rval, updates = theano.scan(
             _step,
@@ -1150,7 +1186,7 @@ def gru_cond_decoder(tparams, state_below, options, prefix='gru_cond_decoder',
                           tensor.alloc(0., n_samples, context.shape[2]),
                           tensor.alloc(0., n_samples, context.shape[0])],
             non_sequences=[pctx_,
-                           context]+shared_vars,
+                           context] + shared_vars,
             name=_p(prefix, '_layers'),
             n_steps=nsteps,
             profile=profile,
@@ -1175,13 +1211,13 @@ def param_init_two_layer_gru_decoder(options, params,
 
     # embedding to gates transformation weights, biases
     W_xc = numpy.concatenate([norm_weight(nin, dim_char),
-                           norm_weight(nin, dim_char)], axis=1)
+                              norm_weight(nin, dim_char)], axis=1)
     params[_p(prefix, 'W_xc')] = W_xc
     params[_p(prefix, 'b_c')] = numpy.zeros((2 * dim_char,)).astype('float32')
 
     # recurrent transformation weights for gates
     U_cc = numpy.concatenate([ortho_weight(dim_char),
-                           ortho_weight(dim_char)], axis=1)
+                              ortho_weight(dim_char)], axis=1)
     params[_p(prefix, 'U_cc')] = U_cc
 
     # embedding to hidden state proposal weights, biases
@@ -1261,7 +1297,6 @@ def two_layer_gru_decoder(tparams, state_below, options,
                           context=None, context_mask=None,
                           init_state_char=None, init_state_word=None,
                           **kwargs):
-
     assert context, 'Context must be provided'
     assert context.ndim == 3, \
         'Context must be 3-D: #annotation x #sample x #dim'
@@ -1274,7 +1309,7 @@ def two_layer_gru_decoder(tparams, state_below, options,
     if state_below.ndim in [2, 3]:
         n_samples = state_below.shape[1]
     elif state_below.ndim == 1:
-        if not  one_step:
+        if not one_step:
             raise ValueError('if state_below.ndim is 1, one_step shoud also be 1')
     else:
         n_samples = 1
@@ -1335,7 +1370,7 @@ def two_layer_gru_decoder(tparams, state_below, options,
         alpha = tensor.dot(proj_h, U_att) + c_att
         alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
         alpha = tensor.exp(alpha - alpha.max(0))
-        #alpha = tensor.exp(alpha)
+        # alpha = tensor.exp(alpha)
         if context_mask:
             alpha = alpha * context_mask
         alpha = alpha / alpha.sum(0, keepdims=True)
@@ -1344,7 +1379,7 @@ def two_layer_gru_decoder(tparams, state_below, options,
         ctx_t = (context * alpha[:, :, None]).sum(0)
 
         # compute char-level
-        preact_c = tensor.dot(h_c_tm1, U_cc) + state_below_emb_t + tensor.dot(ctx_t, W_ctxc )
+        preact_c = tensor.dot(h_c_tm1, U_cc) + state_below_emb_t + tensor.dot(ctx_t, W_ctxc)
         preact_c = tensor.nnet.sigmoid(preact_c)
 
         # update gates
@@ -1385,27 +1420,27 @@ def two_layer_gru_decoder(tparams, state_below, options,
     seqs = [mask, state_below_emb, state_belowx_emb, state_belowctx_emb]
 
     shared_vars = [
-            tparams[_p(prefix, 'U_cc')],
-            tparams[_p(prefix, 'Ux_cc')],
-            tparams[_p(prefix, 'W_cw')],
-            tparams[_p(prefix, 'Wx_cw')],
-            tparams[_p(prefix, 'U_ww')],
-            tparams[_p(prefix, 'Ux_ww')],
-            tparams[_p(prefix, 'b_w')],
-            tparams[_p(prefix, 'bx_w')],
-            tparams[_p(prefix, 'W_ctxc')],
-            tparams[_p(prefix, 'Wx_ctxc')],
-            tparams[_p(prefix, 'W_ctxw')],
-            tparams[_p(prefix, 'Wx_ctxw')],
-            tparams[_p(prefix, 'Wdec_att')],
-            tparams[_p(prefix, 'U_att')],
-            tparams[_p(prefix, 'c_att')],
-        ]
+        tparams[_p(prefix, 'U_cc')],
+        tparams[_p(prefix, 'Ux_cc')],
+        tparams[_p(prefix, 'W_cw')],
+        tparams[_p(prefix, 'Wx_cw')],
+        tparams[_p(prefix, 'U_ww')],
+        tparams[_p(prefix, 'Ux_ww')],
+        tparams[_p(prefix, 'b_w')],
+        tparams[_p(prefix, 'bx_w')],
+        tparams[_p(prefix, 'W_ctxc')],
+        tparams[_p(prefix, 'Wx_ctxc')],
+        tparams[_p(prefix, 'W_ctxw')],
+        tparams[_p(prefix, 'Wx_ctxw')],
+        tparams[_p(prefix, 'Wdec_att')],
+        tparams[_p(prefix, 'U_att')],
+        tparams[_p(prefix, 'c_att')],
+    ]
 
     if one_step:
-        rval = _step(*(seqs+[init_state_char, init_state_word,
-                             None, None,
-                             proj_ctx, context]+shared_vars))
+        rval = _step(*(seqs + [init_state_char, init_state_word,
+                               None, None,
+                               proj_ctx, context] + shared_vars))
     else:
         rval, updates = theano.scan(_step,
                                     sequences=seqs,
@@ -1415,13 +1450,12 @@ def two_layer_gru_decoder(tparams, state_below, options,
                                         tensor.alloc(0., n_samples, context.shape[2]),
                                         tensor.alloc(0., n_samples, context.shape[0])
                                     ],
-                                    non_sequences=[proj_ctx, context]+shared_vars,
+                                    non_sequences=[proj_ctx, context] + shared_vars,
                                     name=_p(prefix, '_layers'),
                                     n_steps=n_steps,
                                     profile=profile,
                                     strict=True)
     return rval
-
 
 
 def param_init_two_layer_gru_decoder_both(options, params,
@@ -1441,13 +1475,13 @@ def param_init_two_layer_gru_decoder_both(options, params,
 
     # embedding to gates transformation weights, biases
     W_xc = numpy.concatenate([norm_weight(nin, dim_char),
-                           norm_weight(nin, dim_char)], axis=1)
+                              norm_weight(nin, dim_char)], axis=1)
     params[_p(prefix, 'W_xc')] = W_xc
     params[_p(prefix, 'b_c')] = numpy.zeros((2 * dim_char,)).astype('float32')
 
     # recurrent transformation weights for gates
     U_cc = numpy.concatenate([ortho_weight(dim_char),
-                           ortho_weight(dim_char)], axis=1)
+                              ortho_weight(dim_char)], axis=1)
     params[_p(prefix, 'U_cc')] = U_cc
 
     # embedding to hidden state proposal weights, biases
@@ -1529,7 +1563,6 @@ def two_layer_gru_decoder_both(tparams, state_below, options,
                                context=None, context_mask=None,
                                init_state_char=None, init_state_word=None,
                                **kwargs):
-
     assert context, 'Context must be provided'
     assert context.ndim == 3, \
         'Context must be 3-D: #annotation x #sample x #dim'
@@ -1542,7 +1575,7 @@ def two_layer_gru_decoder_both(tparams, state_below, options,
     if state_below.ndim in [2, 3]:
         n_samples = state_below.shape[1]
     elif state_below.ndim == 1:
-        if not  one_step:
+        if not one_step:
             raise ValueError('if state_below.ndim is 1, one_step shoud also be 1')
     else:
         n_samples = 1
@@ -1603,7 +1636,7 @@ def two_layer_gru_decoder_both(tparams, state_below, options,
         alpha = tensor.dot(proj_h, U_att) + c_att
         alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
         alpha = tensor.exp(alpha - alpha.max(0))
-        #alpha = tensor.exp(alpha)
+        # alpha = tensor.exp(alpha)
         if context_mask:
             alpha = alpha * context_mask
         alpha = alpha / alpha.sum(0, keepdims=True)
@@ -1653,28 +1686,28 @@ def two_layer_gru_decoder_both(tparams, state_below, options,
     seqs = [mask, state_below_emb, state_belowx_emb, state_belowctx_emb]
 
     shared_vars = [
-            tparams[_p(prefix, 'U_cc')],
-            tparams[_p(prefix, 'Ux_cc')],
-            tparams[_p(prefix, 'W_cw')],
-            tparams[_p(prefix, 'Wx_cw')],
-            tparams[_p(prefix, 'U_ww')],
-            tparams[_p(prefix, 'Ux_ww')],
-            tparams[_p(prefix, 'b_w')],
-            tparams[_p(prefix, 'bx_w')],
-            tparams[_p(prefix, 'W_ctxc')],
-            tparams[_p(prefix, 'Wx_ctxc')],
-            tparams[_p(prefix, 'W_ctxw')],
-            tparams[_p(prefix, 'Wx_ctxw')],
-            tparams[_p(prefix, 'Wdecc_att')],
-            tparams[_p(prefix, 'Wdecw_att')],
-            tparams[_p(prefix, 'U_att')],
-            tparams[_p(prefix, 'c_att')],
-        ]
+        tparams[_p(prefix, 'U_cc')],
+        tparams[_p(prefix, 'Ux_cc')],
+        tparams[_p(prefix, 'W_cw')],
+        tparams[_p(prefix, 'Wx_cw')],
+        tparams[_p(prefix, 'U_ww')],
+        tparams[_p(prefix, 'Ux_ww')],
+        tparams[_p(prefix, 'b_w')],
+        tparams[_p(prefix, 'bx_w')],
+        tparams[_p(prefix, 'W_ctxc')],
+        tparams[_p(prefix, 'Wx_ctxc')],
+        tparams[_p(prefix, 'W_ctxw')],
+        tparams[_p(prefix, 'Wx_ctxw')],
+        tparams[_p(prefix, 'Wdecc_att')],
+        tparams[_p(prefix, 'Wdecw_att')],
+        tparams[_p(prefix, 'U_att')],
+        tparams[_p(prefix, 'c_att')],
+    ]
 
     if one_step:
-        rval = _step(*(seqs+[init_state_char, init_state_word,
-                             None, None,
-                             proj_ctx, context]+shared_vars))
+        rval = _step(*(seqs + [init_state_char, init_state_word,
+                               None, None,
+                               proj_ctx, context] + shared_vars))
     else:
         rval, updates = theano.scan(_step,
                                     sequences=seqs,
@@ -1684,7 +1717,7 @@ def two_layer_gru_decoder_both(tparams, state_below, options,
                                         tensor.alloc(0., n_samples, context.shape[2]),
                                         tensor.alloc(0., n_samples, context.shape[0])
                                     ],
-                                    non_sequences=[proj_ctx, context]+shared_vars,
+                                    non_sequences=[proj_ctx, context] + shared_vars,
                                     name=_p(prefix, '_layers'),
                                     n_steps=n_steps,
                                     profile=profile,
@@ -1817,7 +1850,6 @@ def biscale_decoder(tparams, state_below, options,
                     init_bound_char=None, init_bound_word=None,
                     scalar_bound=False,
                     **kwargs):
-
     assert context, 'Context must be provided'
     assert context.ndim == 3, \
         'Context must be 3-D: #annotation x #sample x #dim'
@@ -1832,7 +1864,7 @@ def biscale_decoder(tparams, state_below, options,
     if state_below.ndim in [2, 3]:
         n_samples = state_below.shape[1]
     elif state_below.ndim == 1:
-        if not  one_step:
+        if not one_step:
             raise ValueError('if state_below.ndim is 1, one_step shoud also be 1')
     else:
         n_samples = 1
@@ -1912,7 +1944,7 @@ def biscale_decoder(tparams, state_below, options,
         alpha = tensor.dot(proj_h, U_att) + c_att
         alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
         alpha = tensor.exp(alpha - alpha.max(0))
-        #alpha = tensor.exp(alpha)
+        # alpha = tensor.exp(alpha)
         if context_mask:
             alpha = alpha * context_mask
         alpha = alpha / alpha.sum(0, keepdims=True)
@@ -1925,7 +1957,8 @@ def biscale_decoder(tparams, state_below, options,
             bd_w_tm1 = bd_w_tm1[:, None]
 
         # compute char-level
-        preact_c = tensor.dot((1 - bd_c_tm1) * h_c_tm1, U_cc) + tensor.dot(bd_c_tm1 * h_w_tm1, U_wc) + tensor.dot(ctx_t, W_ctxc )
+        preact_c = tensor.dot((1 - bd_c_tm1) * h_c_tm1, U_cc) + tensor.dot(bd_c_tm1 * h_w_tm1, U_wc) + tensor.dot(ctx_t,
+                                                                                                                  W_ctxc)
 
         if scalar_bound:
             preact_c += state_below_emb_t
@@ -1937,12 +1970,14 @@ def biscale_decoder(tparams, state_below, options,
         bd_c_t = tensor.nnet.sigmoid(preact_c)
 
         # compute the hidden state proposal: char-level
-        preactx_c = tensor.dot((1 - bd_c_tm1) * h_c_tm1, Ux_cc) + tensor.dot(bd_c_tm1 * h_w_tm1, Ux_wc) + tensor.dot(ctx_t, Wx_ctxc) + state_belowx_emb_t
+        preactx_c = tensor.dot((1 - bd_c_tm1) * h_c_tm1, Ux_cc) + tensor.dot(bd_c_tm1 * h_w_tm1, Ux_wc) + tensor.dot(
+            ctx_t, Wx_ctxc) + state_belowx_emb_t
         h_c_t = tensor.tanh(preactx_c)
         h_c_t = m_t[:, None] * h_c_t + (1. - m_t)[:, None] * h_c_tm1
 
         # compute word-level
-        preact_w = tensor.dot((1 - bd_w_tm1) * h_w_tm1, U_ww) + tensor.dot(bd_c_t * h_c_t, W_cw) + tensor.dot(ctx_t, W_ctxw)
+        preact_w = tensor.dot((1 - bd_w_tm1) * h_w_tm1, U_ww) + tensor.dot(bd_c_t * h_c_t, W_cw) + tensor.dot(ctx_t,
+                                                                                                              W_ctxw)
 
         if scalar_bound:
             preact_w += b_w[:, None]
@@ -1954,7 +1989,8 @@ def biscale_decoder(tparams, state_below, options,
         bd_w_t = tensor.nnet.sigmoid(preact_w)
 
         # compute the hidden state proposal: word-level
-        preactx_w = tensor.dot((1 - bd_w_tm1) * h_w_tm1, Ux_ww) + tensor.dot(bd_c_t * h_c_t, Wx_cw) + tensor.dot(ctx_t, Wx_ctxw) + bx_w
+        preactx_w = tensor.dot((1 - bd_w_tm1) * h_w_tm1, Ux_ww) + tensor.dot(bd_c_t * h_c_t, Wx_cw) + tensor.dot(ctx_t,
+                                                                                                                 Wx_ctxw) + bx_w
         h_w_t = tensor.tanh(preactx_w)
         h_w_t = bd_c_t * h_w_t + (1. - bd_c_t) * h_w_tm1
         h_w_t = m_t[:, None] * h_w_t + (1. - m_t)[:, None] * h_w_tm1
@@ -1969,30 +2005,30 @@ def biscale_decoder(tparams, state_below, options,
     seqs = [mask, state_below_emb, state_belowx_emb, state_belowctx_emb]
 
     shared_vars = [
-            tparams[_p(prefix, 'U_cc')],
-            tparams[_p(prefix, 'Ux_cc')],
-            tparams[_p(prefix, 'U_wc')],
-            tparams[_p(prefix, 'Ux_wc')],
-            tparams[_p(prefix, 'W_cw')],
-            tparams[_p(prefix, 'Wx_cw')],
-            tparams[_p(prefix, 'U_ww')],
-            tparams[_p(prefix, 'Ux_ww')],
-            tparams[_p(prefix, 'b_w')],
-            tparams[_p(prefix, 'bx_w')],
-            tparams[_p(prefix, 'W_ctxc')],
-            tparams[_p(prefix, 'Wx_ctxc')],
-            tparams[_p(prefix, 'W_ctxw')],
-            tparams[_p(prefix, 'Wx_ctxw')],
-            tparams[_p(prefix, 'Wdec_att')],
-            tparams[_p(prefix, 'U_att')],
-            tparams[_p(prefix, 'c_att')],
-        ]
+        tparams[_p(prefix, 'U_cc')],
+        tparams[_p(prefix, 'Ux_cc')],
+        tparams[_p(prefix, 'U_wc')],
+        tparams[_p(prefix, 'Ux_wc')],
+        tparams[_p(prefix, 'W_cw')],
+        tparams[_p(prefix, 'Wx_cw')],
+        tparams[_p(prefix, 'U_ww')],
+        tparams[_p(prefix, 'Ux_ww')],
+        tparams[_p(prefix, 'b_w')],
+        tparams[_p(prefix, 'bx_w')],
+        tparams[_p(prefix, 'W_ctxc')],
+        tparams[_p(prefix, 'Wx_ctxc')],
+        tparams[_p(prefix, 'W_ctxw')],
+        tparams[_p(prefix, 'Wx_ctxw')],
+        tparams[_p(prefix, 'Wdec_att')],
+        tparams[_p(prefix, 'U_att')],
+        tparams[_p(prefix, 'c_att')],
+    ]
 
     if one_step:
-        rval = _step(*(seqs+[init_state_char, init_state_word,
-                             init_bound_char, init_bound_word,
-                             None, None,
-                             proj_ctx, context]+shared_vars))
+        rval = _step(*(seqs + [init_state_char, init_state_word,
+                               init_bound_char, init_bound_word,
+                               None, None,
+                               proj_ctx, context] + shared_vars))
     else:
         rval, updates = theano.scan(_step,
                                     sequences=seqs,
@@ -2004,7 +2040,7 @@ def biscale_decoder(tparams, state_below, options,
                                         tensor.alloc(0., n_samples, context.shape[2]),
                                         tensor.alloc(0., n_samples, context.shape[0])
                                     ],
-                                    non_sequences=[proj_ctx, context]+shared_vars,
+                                    non_sequences=[proj_ctx, context] + shared_vars,
                                     name=_p(prefix, '_layers'),
                                     n_steps=n_steps,
                                     profile=profile,
@@ -2137,7 +2173,6 @@ def biscale_decoder_attc(tparams, state_below, options,
                          init_bound_char=None, init_bound_word=None,
                          scalar_bound=False,
                          **kwargs):
-
     assert context, 'Context must be provided'
     assert context.ndim == 3, \
         'Context must be 3-D: #annotation x #sample x #dim'
@@ -2152,7 +2187,7 @@ def biscale_decoder_attc(tparams, state_below, options,
     if state_below.ndim in [2, 3]:
         n_samples = state_below.shape[1]
     elif state_below.ndim == 1:
-        if not  one_step:
+        if not one_step:
             raise ValueError('if state_below.ndim is 1, one_step shoud also be 1')
     else:
         n_samples = 1
@@ -2232,7 +2267,7 @@ def biscale_decoder_attc(tparams, state_below, options,
         alpha = tensor.dot(proj_h, U_att) + c_att
         alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
         alpha = tensor.exp(alpha - alpha.max(0))
-        #alpha = tensor.exp(alpha)
+        # alpha = tensor.exp(alpha)
         if context_mask:
             alpha = alpha * context_mask
         alpha = alpha / alpha.sum(0, keepdims=True)
@@ -2245,7 +2280,8 @@ def biscale_decoder_attc(tparams, state_below, options,
             bd_w_tm1 = bd_w_tm1[:, None]
 
         # compute char-level
-        preact_c = tensor.dot((1 - bd_c_tm1) * h_c_tm1, U_cc) + tensor.dot(bd_c_tm1 * h_w_tm1, U_wc) + tensor.dot(ctx_t, W_ctxc )
+        preact_c = tensor.dot((1 - bd_c_tm1) * h_c_tm1, U_cc) + tensor.dot(bd_c_tm1 * h_w_tm1, U_wc) + tensor.dot(ctx_t,
+                                                                                                                  W_ctxc)
 
         if scalar_bound:
             preact_c += state_below_emb_t
@@ -2257,12 +2293,14 @@ def biscale_decoder_attc(tparams, state_below, options,
         bd_c_t = tensor.nnet.sigmoid(preact_c)
 
         # compute the hidden state proposal: char-level
-        preactx_c = tensor.dot((1 - bd_c_tm1) * h_c_tm1, Ux_cc) + tensor.dot(bd_c_tm1 * h_w_tm1, Ux_wc) + tensor.dot(ctx_t, Wx_ctxc) + state_belowx_emb_t
+        preactx_c = tensor.dot((1 - bd_c_tm1) * h_c_tm1, Ux_cc) + tensor.dot(bd_c_tm1 * h_w_tm1, Ux_wc) + tensor.dot(
+            ctx_t, Wx_ctxc) + state_belowx_emb_t
         h_c_t = tensor.tanh(preactx_c)
         h_c_t = m_t[:, None] * h_c_t + (1. - m_t)[:, None] * h_c_tm1
 
         # compute word-level
-        preact_w = tensor.dot((1 - bd_w_tm1) * h_w_tm1, U_ww) + tensor.dot(bd_c_t * h_c_t, W_cw) + tensor.dot(ctx_t, W_ctxw)
+        preact_w = tensor.dot((1 - bd_w_tm1) * h_w_tm1, U_ww) + tensor.dot(bd_c_t * h_c_t, W_cw) + tensor.dot(ctx_t,
+                                                                                                              W_ctxw)
 
         if scalar_bound:
             preact_w += b_w[:, None]
@@ -2274,7 +2312,8 @@ def biscale_decoder_attc(tparams, state_below, options,
         bd_w_t = tensor.nnet.sigmoid(preact_w)
 
         # compute the hidden state proposal: word-level
-        preactx_w = tensor.dot((1 - bd_w_tm1) * h_w_tm1, Ux_ww) + tensor.dot(bd_c_t * h_c_t, Wx_cw) + tensor.dot(ctx_t, Wx_ctxw) + bx_w
+        preactx_w = tensor.dot((1 - bd_w_tm1) * h_w_tm1, Ux_ww) + tensor.dot(bd_c_t * h_c_t, Wx_cw) + tensor.dot(ctx_t,
+                                                                                                                 Wx_ctxw) + bx_w
         h_w_t = tensor.tanh(preactx_w)
         h_w_t = bd_c_t * h_w_t + (1. - bd_c_t) * h_w_tm1
         h_w_t = m_t[:, None] * h_w_t + (1. - m_t)[:, None] * h_w_tm1
@@ -2289,30 +2328,30 @@ def biscale_decoder_attc(tparams, state_below, options,
     seqs = [mask, state_below_emb, state_belowx_emb, state_belowctx_emb]
 
     shared_vars = [
-            tparams[_p(prefix, 'U_cc')],
-            tparams[_p(prefix, 'Ux_cc')],
-            tparams[_p(prefix, 'U_wc')],
-            tparams[_p(prefix, 'Ux_wc')],
-            tparams[_p(prefix, 'W_cw')],
-            tparams[_p(prefix, 'Wx_cw')],
-            tparams[_p(prefix, 'U_ww')],
-            tparams[_p(prefix, 'Ux_ww')],
-            tparams[_p(prefix, 'b_w')],
-            tparams[_p(prefix, 'bx_w')],
-            tparams[_p(prefix, 'W_ctxc')],
-            tparams[_p(prefix, 'Wx_ctxc')],
-            tparams[_p(prefix, 'W_ctxw')],
-            tparams[_p(prefix, 'Wx_ctxw')],
-            tparams[_p(prefix, 'Wdec_att')],
-            tparams[_p(prefix, 'U_att')],
-            tparams[_p(prefix, 'c_att')],
-        ]
+        tparams[_p(prefix, 'U_cc')],
+        tparams[_p(prefix, 'Ux_cc')],
+        tparams[_p(prefix, 'U_wc')],
+        tparams[_p(prefix, 'Ux_wc')],
+        tparams[_p(prefix, 'W_cw')],
+        tparams[_p(prefix, 'Wx_cw')],
+        tparams[_p(prefix, 'U_ww')],
+        tparams[_p(prefix, 'Ux_ww')],
+        tparams[_p(prefix, 'b_w')],
+        tparams[_p(prefix, 'bx_w')],
+        tparams[_p(prefix, 'W_ctxc')],
+        tparams[_p(prefix, 'Wx_ctxc')],
+        tparams[_p(prefix, 'W_ctxw')],
+        tparams[_p(prefix, 'Wx_ctxw')],
+        tparams[_p(prefix, 'Wdec_att')],
+        tparams[_p(prefix, 'U_att')],
+        tparams[_p(prefix, 'c_att')],
+    ]
 
     if one_step:
-        rval = _step(*(seqs+[init_state_char, init_state_word,
-                             init_bound_char, init_bound_word,
-                             None, None,
-                             proj_ctx, context]+shared_vars))
+        rval = _step(*(seqs + [init_state_char, init_state_word,
+                               init_bound_char, init_bound_word,
+                               None, None,
+                               proj_ctx, context] + shared_vars))
     else:
         rval, updates = theano.scan(_step,
                                     sequences=seqs,
@@ -2324,7 +2363,7 @@ def biscale_decoder_attc(tparams, state_below, options,
                                         tensor.alloc(0., n_samples, context.shape[2]),
                                         tensor.alloc(0., n_samples, context.shape[0])
                                     ],
-                                    non_sequences=[proj_ctx, context]+shared_vars,
+                                    non_sequences=[proj_ctx, context] + shared_vars,
                                     name=_p(prefix, '_layers'),
                                     n_steps=n_steps,
                                     profile=profile,
@@ -2459,7 +2498,6 @@ def biscale_decoder_both(tparams, state_below, options,
                          init_bound_char=None, init_bound_word=None,
                          scalar_bound=False,
                          **kwargs):
-
     assert context, 'Context must be provided'
     assert context.ndim == 3, \
         'Context must be 3-D: #annotation x #sample x #dim'
@@ -2474,7 +2512,7 @@ def biscale_decoder_both(tparams, state_below, options,
     if state_below.ndim in [2, 3]:
         n_samples = state_below.shape[1]
     elif state_below.ndim == 1:
-        if not  one_step:
+        if not one_step:
             raise ValueError('if state_below.ndim is 1, one_step shoud also be 1')
     else:
         n_samples = 1
@@ -2554,7 +2592,7 @@ def biscale_decoder_both(tparams, state_below, options,
         alpha = tensor.dot(proj_h, U_att) + c_att
         alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
         alpha = tensor.exp(alpha - alpha.max(0))
-        #alpha = tensor.exp(alpha)
+        # alpha = tensor.exp(alpha)
         if context_mask:
             alpha = alpha * context_mask
         alpha = alpha / alpha.sum(0, keepdims=True)
@@ -2567,7 +2605,8 @@ def biscale_decoder_both(tparams, state_below, options,
             bd_w_tm1 = bd_w_tm1[:, None]
 
         # compute char-level
-        preact_c = tensor.dot((1 - bd_c_tm1) * h_c_tm1, U_cc) + tensor.dot(bd_c_tm1 * h_w_tm1, U_wc) + tensor.dot(ctx_t, W_ctxc )
+        preact_c = tensor.dot((1 - bd_c_tm1) * h_c_tm1, U_cc) + tensor.dot(bd_c_tm1 * h_w_tm1, U_wc) + tensor.dot(ctx_t,
+                                                                                                                  W_ctxc)
 
         if scalar_bound:
             preact_c += state_below_emb_t
@@ -2579,12 +2618,14 @@ def biscale_decoder_both(tparams, state_below, options,
         bd_c_t = tensor.nnet.sigmoid(preact_c)
 
         # compute the hidden state proposal: char-level
-        preactx_c = tensor.dot((1 - bd_c_tm1) * h_c_tm1, Ux_cc) + tensor.dot(bd_c_tm1 * h_w_tm1, Ux_wc) + tensor.dot(ctx_t, Wx_ctxc) + state_belowx_emb_t
+        preactx_c = tensor.dot((1 - bd_c_tm1) * h_c_tm1, Ux_cc) + tensor.dot(bd_c_tm1 * h_w_tm1, Ux_wc) + tensor.dot(
+            ctx_t, Wx_ctxc) + state_belowx_emb_t
         h_c_t = tensor.tanh(preactx_c)
         h_c_t = m_t[:, None] * h_c_t + (1. - m_t)[:, None] * h_c_tm1
 
         # compute word-level
-        preact_w = tensor.dot((1 - bd_w_tm1) * h_w_tm1, U_ww) + tensor.dot(bd_c_t * h_c_t, W_cw) + tensor.dot(ctx_t, W_ctxw)
+        preact_w = tensor.dot((1 - bd_w_tm1) * h_w_tm1, U_ww) + tensor.dot(bd_c_t * h_c_t, W_cw) + tensor.dot(ctx_t,
+                                                                                                              W_ctxw)
 
         if scalar_bound:
             preact_w += b_w[:, None]
@@ -2596,7 +2637,8 @@ def biscale_decoder_both(tparams, state_below, options,
         bd_w_t = tensor.nnet.sigmoid(preact_w)
 
         # compute the hidden state proposal: word-level
-        preactx_w = tensor.dot((1 - bd_w_tm1) * h_w_tm1, Ux_ww) + tensor.dot(bd_c_t * h_c_t, Wx_cw) + tensor.dot(ctx_t, Wx_ctxw) + bx_w
+        preactx_w = tensor.dot((1 - bd_w_tm1) * h_w_tm1, Ux_ww) + tensor.dot(bd_c_t * h_c_t, Wx_cw) + tensor.dot(ctx_t,
+                                                                                                                 Wx_ctxw) + bx_w
         h_w_t = tensor.tanh(preactx_w)
         h_w_t = bd_c_t * h_w_t + (1. - bd_c_t) * h_w_tm1
         h_w_t = m_t[:, None] * h_w_t + (1. - m_t)[:, None] * h_w_tm1
@@ -2611,31 +2653,31 @@ def biscale_decoder_both(tparams, state_below, options,
     seqs = [mask, state_below_emb, state_belowx_emb, state_belowctx_emb]
 
     shared_vars = [
-            tparams[_p(prefix, 'U_cc')],
-            tparams[_p(prefix, 'Ux_cc')],
-            tparams[_p(prefix, 'U_wc')],
-            tparams[_p(prefix, 'Ux_wc')],
-            tparams[_p(prefix, 'W_cw')],
-            tparams[_p(prefix, 'Wx_cw')],
-            tparams[_p(prefix, 'U_ww')],
-            tparams[_p(prefix, 'Ux_ww')],
-            tparams[_p(prefix, 'b_w')],
-            tparams[_p(prefix, 'bx_w')],
-            tparams[_p(prefix, 'W_ctxc')],
-            tparams[_p(prefix, 'Wx_ctxc')],
-            tparams[_p(prefix, 'W_ctxw')],
-            tparams[_p(prefix, 'Wx_ctxw')],
-            tparams[_p(prefix, 'Wdecc_att')],
-            tparams[_p(prefix, 'Wdecw_att')],
-            tparams[_p(prefix, 'U_att')],
-            tparams[_p(prefix, 'c_att')],
-        ]
+        tparams[_p(prefix, 'U_cc')],
+        tparams[_p(prefix, 'Ux_cc')],
+        tparams[_p(prefix, 'U_wc')],
+        tparams[_p(prefix, 'Ux_wc')],
+        tparams[_p(prefix, 'W_cw')],
+        tparams[_p(prefix, 'Wx_cw')],
+        tparams[_p(prefix, 'U_ww')],
+        tparams[_p(prefix, 'Ux_ww')],
+        tparams[_p(prefix, 'b_w')],
+        tparams[_p(prefix, 'bx_w')],
+        tparams[_p(prefix, 'W_ctxc')],
+        tparams[_p(prefix, 'Wx_ctxc')],
+        tparams[_p(prefix, 'W_ctxw')],
+        tparams[_p(prefix, 'Wx_ctxw')],
+        tparams[_p(prefix, 'Wdecc_att')],
+        tparams[_p(prefix, 'Wdecw_att')],
+        tparams[_p(prefix, 'U_att')],
+        tparams[_p(prefix, 'c_att')],
+    ]
 
     if one_step:
-        rval = _step(*(seqs+[init_state_char, init_state_word,
-                             init_bound_char, init_bound_word,
-                             None, None,
-                             proj_ctx, context]+shared_vars))
+        rval = _step(*(seqs + [init_state_char, init_state_word,
+                               init_bound_char, init_bound_word,
+                               None, None,
+                               proj_ctx, context] + shared_vars))
     else:
         rval, updates = theano.scan(_step,
                                     sequences=seqs,
@@ -2647,7 +2689,7 @@ def biscale_decoder_both(tparams, state_below, options,
                                         tensor.alloc(0., n_samples, context.shape[2]),
                                         tensor.alloc(0., n_samples, context.shape[0])
                                     ],
-                                    non_sequences=[proj_ctx, context]+shared_vars,
+                                    non_sequences=[proj_ctx, context] + shared_vars,
                                     name=_p(prefix, '_layers'),
                                     n_steps=n_steps,
                                     profile=profile,
@@ -2659,7 +2701,7 @@ def biscale_decoder_both(tparams, state_below, options,
 def gradient_clipping(grads, tparams, clip_c=10):
     g2 = 0.
     for g in grads:
-        g2 += (g**2).sum()
+        g2 += (g ** 2).sum()
 
     g2 = tensor.sqrt(g2)
     not_finite = tensor.or_(tensor.isnan(g2), tensor.isinf(g2))
@@ -2699,13 +2741,13 @@ def adam(lr, tparams, grads, inp, cost, not_finite=None, clipped=None,
     toptparams = init_tparams(optparams)
 
     i_t = toptparams['i'] + 1.
-    fix1 = b1**i_t
-    fix2 = b2**i_t
+    fix1 = b1 ** i_t
+    fix2 = b2 ** i_t
     lr_t = lr * tensor.sqrt(1. - fix2) / (1. - fix1)
 
     for (k, p), g in zip(tparams.items(), gshared):
         m_t = b1 * toptparams[_p(k, 'm')] + (1. - b1) * g
-        v_t = b2 * toptparams[_p(k, 'v')] + (1. - b2) * g**2
+        v_t = b2 * toptparams[_p(k, 'v')] + (1. - b2) * g ** 2
         g_t = lr_t * m_t / (tensor.sqrt(v_t) + eps)
         p_t = p - g_t
         updates[toptparams[_p(k, 'm')]] = m_t
@@ -2733,7 +2775,7 @@ def adadelta(lr, tparams, grads, inp, cost):
     rg2up = [(rg2, 0.95 * rg2 + 0.05 * (g ** 2))
              for rg2, g in zip(running_grads2, grads)]
 
-    f_grad_shared = theano.function(inp, cost, updates=zgup+rg2up,
+    f_grad_shared = theano.function(inp, cost, updates=zgup + rg2up,
                                     profile=profile)
 
     updir = [-tensor.sqrt(ru2 + 1e-6) / tensor.sqrt(rg2 + 1e-6) * zg
@@ -2743,14 +2785,13 @@ def adadelta(lr, tparams, grads, inp, cost):
              for ru2, ud in zip(running_up2, updir)]
     param_up = [(p, p + ud) for p, ud in zip(itemlist(tparams), updir)]
 
-    f_update = theano.function([lr], [], updates=ru2up+param_up,
+    f_update = theano.function([lr], [], updates=ru2up + param_up,
                                on_unused_input='ignore', profile=profile)
 
     return f_grad_shared, f_update
 
 
 def rmsprop(lr, tparams, grads, inp, cost, not_finite=None, clipped=None, mom=0.9, sec_mom=0.95, eps=1e-4):
-
     zipped_grads = [theano.shared(p.get_value() * numpy.float32(0.),
                                   name='%s_grad' % k)
                     for k, p in tparams.iteritems()]
@@ -2763,23 +2804,23 @@ def rmsprop(lr, tparams, grads, inp, cost, not_finite=None, clipped=None, mom=0.
 
     zgup = [(zg, g) for zg, g in zip(zipped_grads, grads)]
     rgup = [(rg, sec_mom * rg + (1. - sec_mom) * g) for rg, g in zip(running_grads, grads)]
-    rg2up = [(rg2, sec_mom * rg2 + (1. - sec_mom) * g**2)
+    rg2up = [(rg2, sec_mom * rg2 + (1. - sec_mom) * g ** 2)
              for rg2, g in zip(running_grads2, grads)]
 
     if not_finite is not None or clipped is not None:
-        f_grad_shared = theano.function(inp, [cost, not_finite, clipped], updates=zgup+rgup+rg2up, profile=profile)
+        f_grad_shared = theano.function(inp, [cost, not_finite, clipped], updates=zgup + rgup + rg2up, profile=profile)
     else:
-        f_grad_shared = theano.function(inp, cost, updates=zgup+rgup+rg2up, profile=profile)
+        f_grad_shared = theano.function(inp, cost, updates=zgup + rgup + rg2up, profile=profile)
 
     updir = [theano.shared(p.get_value() * numpy.float32(0.),
                            name='%s_updir' % k)
              for k, p in tparams.iteritems()]
-    updir_new = [(ud, mom * ud - lr * zg / tensor.sqrt(rg2 - rg**2 + eps))
+    updir_new = [(ud, mom * ud - lr * zg / tensor.sqrt(rg2 - rg ** 2 + eps))
                  for ud, zg, rg, rg2 in zip(updir, zipped_grads, running_grads,
                                             running_grads2)]
     param_up = [(p, p + udn[1])
                 for p, udn in zip(itemlist(tparams), updir_new)]
-    f_update = theano.function([lr], [], updates=updir_new+param_up,
+    f_update = theano.function([lr], [], updates=updir_new + param_up,
                                on_unused_input='ignore', profile=profile)
 
     return f_grad_shared, f_update

@@ -14,6 +14,7 @@ import time
 from collections import OrderedDict
 from mixer import *
 
+
 def init_params(options):
     params = OrderedDict()
 
@@ -23,10 +24,13 @@ def init_params(options):
     params['Wemb'] = norm_weight(options['n_words_src'], options['dim_word_src'])
     params['Wemb_dec'] = norm_weight(options['n_words'], options['dim_word'])
 
-    params = get_layer('multi_scale_conv_encoder')[0](options, params, prefix='multi_scale_conv_enc1', dim=options['dim_word_src'], width=options['conv_width'], nkernels=options['conv_nkernels'])
+    params = get_layer('multi_scale_conv_encoder')[0](options, params, prefix='multi_scale_conv_enc1',
+                                                      dim=options['dim_word_src'], width=options['conv_width'],
+                                                      nkernels=options['conv_nkernels'])
 
     for ii in xrange(options['highway']):
-        params = get_layer('hw')[0](options, params, prefix="hw_network{}".format(ii+1), dim=numpy.sum(options['conv_nkernels']))
+        params = get_layer('hw')[0](options, params, prefix="hw_network{}".format(ii + 1),
+                                    dim=numpy.sum(options['conv_nkernels']))
 
     params = get_layer('gru')[0](options, params,
                                  prefix='encoder',
@@ -99,12 +103,15 @@ def build_model(tparams, options):
     emb = emb.reshape([n_timesteps, n_samples, options['dim_word_src']])
     # emb.shape = (maxlen_x_pad + 2*pool_stride, n_samples, dim_word_src)
 
-    conv_out = get_layer('multi_scale_conv_encoder')[1](tparams, emb, options, prefix='multi_scale_conv_enc1', width=options['conv_width'], nkernels=options['conv_nkernels'], pool_window=options['pool_window'], pool_stride=options['pool_stride'])
+    conv_out = get_layer('multi_scale_conv_encoder')[1](tparams, emb, options, prefix='multi_scale_conv_enc1',
+                                                        width=options['conv_width'], nkernels=options['conv_nkernels'],
+                                                        pool_window=options['pool_window'],
+                                                        pool_stride=options['pool_stride'])
     # conv_out.shape = (maxlen_x_pad/pool_stride, n_samples, sum(nkernels))
 
     hw_in = conv_out.reshape([conv_out.shape[0] * conv_out.shape[1], conv_out.shape[2]])
     for ii in xrange(options['highway']):
-        hw_in = get_layer('hw')[1](tparams, hw_in, options, prefix="hw_network{}".format(ii+1))
+        hw_in = get_layer('hw')[1](tparams, hw_in, options, prefix="hw_network{}".format(ii + 1))
     hw_out = hw_in.reshape([conv_out.shape[0], conv_out.shape[1], conv_out.shape[2]])
     # hw_out.shape = (maxlen_x_pad/pool_stride, n_samples, sum(nkernels))
 
@@ -117,7 +124,7 @@ def build_model(tparams, options):
     projr = get_layer('gru')[1](tparams, hw_out[::-1], options, prefix='encoderr', mask=xr_mask)
 
     # context
-    ctx = concatenate([proj, projr[::-1]], axis=proj.ndim-1)
+    ctx = concatenate([proj, projr[::-1]], axis=proj.ndim - 1)
 
     # context mean
     ctx_mean = (ctx * x_mask[:, :, None]).sum(0) / x_mask.sum(0)[:, None]
@@ -136,14 +143,14 @@ def build_model(tparams, options):
     yemb = yemb_shited
 
     char_h, word_h, ctxs, alphas = \
-            get_layer('two_layer_gru_decoder')[1](tparams, yemb, options,
-                                                  prefix='decoder',
-                                                  mask=y_mask,
-                                                  context=ctx,
-                                                  context_mask=x_mask,
-                                                  one_step=False,
-                                                  init_state_char=init_state_char,
-                                                  init_state_word=init_state_word)
+        get_layer('two_layer_gru_decoder')[1](tparams, yemb, options,
+                                              prefix='decoder',
+                                              mask=y_mask,
+                                              context=ctx,
+                                              context_mask=x_mask,
+                                              one_step=False,
+                                              init_state_char=init_state_char,
+                                              init_state_word=init_state_word)
 
     opt_ret['dec_alphas'] = alphas
 
@@ -163,7 +170,7 @@ def build_model(tparams, options):
     logit = get_layer('ff')[1](tparams, logit, options,
                                prefix='ff_logit', activ='linear')
     logit_shp = logit.shape
-    probs = tensor.nnet.softmax(logit.reshape([logit_shp[0]*logit_shp[1], logit_shp[2]]))
+    probs = tensor.nnet.softmax(logit.reshape([logit_shp[0] * logit_shp[1], logit_shp[2]]))
 
     # cost
     y_flat = y.flatten()
@@ -174,8 +181,8 @@ def build_model(tparams, options):
 
     return trng, use_noise, x, x_mask, y, y_mask, opt_ret, cost
 
-def build_sampler(tparams, options, trng, use_noise):
 
+def build_sampler(tparams, options, trng, use_noise):
     x = tensor.matrix('x', dtype='int64')
 
     n_timesteps = x.shape[0]
@@ -184,18 +191,22 @@ def build_sampler(tparams, options, trng, use_noise):
     emb = tparams['Wemb'][x.flatten()]
     emb = emb.reshape([n_timesteps, n_samples, options['dim_word_src']])
 
-    conv_out = get_layer('multi_scale_conv_encoder')[1](tparams, emb, options, prefix='multi_scale_conv_enc1', width=options['conv_width'], nkernels=options['conv_nkernels'], pool_window=options['pool_window'], pool_stride=options['pool_stride'])
+    conv_out = get_layer('multi_scale_conv_encoder')[1](tparams, emb, options, prefix='multi_scale_conv_enc1',
+                                                        width=options['conv_width'], nkernels=options['conv_nkernels'],
+                                                        pool_window=options['pool_window'],
+                                                        pool_stride=options['pool_stride'])
 
+    # n_steps * n_samples * dim
     hw_in = conv_out.reshape([conv_out.shape[0] * conv_out.shape[1], conv_out.shape[2]])
     for ii in xrange(options['highway']):
-        hw_in = get_layer('hw')[1](tparams, hw_in, options, prefix="hw_network{}".format(ii+1))
+        hw_in = get_layer('hw')[1](tparams, hw_in, options, prefix="hw_network{}".format(ii + 1))
     hw_out = hw_in.reshape([conv_out.shape[0], conv_out.shape[1], conv_out.shape[2]])
 
     # pass through gru layer, recurrence here
     proj = get_layer('gru')[1](tparams, hw_out, options, prefix='encoder')
     projr = get_layer('gru')[1](tparams, hw_out[::-1], options, prefix='encoderr')
 
-    ctx = concatenate([proj, projr[::-1]], axis=proj.ndim-1)
+    ctx = concatenate([proj, projr[::-1]], axis=proj.ndim - 1)
     ctx_mean = ctx.mean(0)
 
     init_state_char = get_layer('ff')[1](tparams, ctx_mean, options,
@@ -218,13 +229,13 @@ def build_sampler(tparams, options, trng, use_noise):
                          tparams['Wemb_dec'][y])
 
     next_state_char, next_state_word, next_ctx, next_alpha = \
-            get_layer('two_layer_gru_decoder')[1](tparams, yemb, options,
-                                                  prefix='decoder',
-                                                  context=ctx,
-                                                  mask=None,
-                                                  one_step=True,
-                                                  init_state_char=init_state_char,
-                                                  init_state_word=init_state_word)
+        get_layer('two_layer_gru_decoder')[1](tparams, yemb, options,
+                                              prefix='decoder',
+                                              context=ctx,
+                                              mask=None,
+                                              one_step=True,
+                                              init_state_char=init_state_char,
+                                              init_state_word=init_state_word)
 
     logit_rnn = get_layer('fff')[1](tparams,
                                     next_state_char,
@@ -262,9 +273,9 @@ def build_sampler(tparams, options, trng, use_noise):
 
     return f_init, f_next
 
+
 def gen_sample(tparams, f_init, f_next, x, options, trng=None,
                k=1, maxlen=500, stochastic=True, argmax=False):
-
     # k is the beam size we have
     if k > 1:
         assert not stochastic, \
@@ -310,7 +321,7 @@ def gen_sample(tparams, f_init, f_next, x, options, trng=None,
             cand_scores = hyp_scores[:, None] - numpy.log(next_p)
             cand_flat = cand_scores.flatten()
 
-            ranks_flat = cand_flat.argsort()[:(k-dead_k)]
+            ranks_flat = cand_flat.argsort()[:(k - dead_k)]
             # k: beam width
             # dead_k : initially 0, increments 1 by 1
 
@@ -322,12 +333,12 @@ def gen_sample(tparams, f_init, f_next, x, options, trng=None,
 
             new_hyp_samples = []
             # k : beam width
-            new_hyp_scores = numpy.zeros(k-dead_k).astype('float32')
+            new_hyp_scores = numpy.zeros(k - dead_k).astype('float32')
             new_hyp_states_char = []
             new_hyp_states_word = []
 
             for idx, [ti, wi] in enumerate(zip(trans_indices, word_indices)):
-                new_hyp_samples.append(hyp_samples[ti]+[wi])
+                new_hyp_samples.append(hyp_samples[ti] + [wi])
                 new_hyp_scores[idx] = copy.copy(costs[idx])
                 new_hyp_states_char.append(copy.copy(next_state_char[ti]))
                 new_hyp_states_word.append(copy.copy(next_state_word[ti]))

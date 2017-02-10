@@ -13,14 +13,15 @@ layers = {'ff': ('param_init_fflayer', 'fflayer'),
                                     'two_layer_gru_decoder'),
           }
 
+
 def main(job_id, params):
     save_file_name = args.model_name
-    source_dataset = args.data_path + wmts[args.translate]['train'][1][0]
-    target_dataset = args.data_path + wmts[args.translate]['train'][0][1]
-    valid_source_dataset = args.data_path + wmts[args.translate]['dev'][1][0]
-    valid_target_dataset = args.data_path + wmts[args.translate]['dev'][0][1]
-    source_dictionary = args.data_path + wmts[args.translate]['dic'][1][0]
-    target_dictionary = args.data_path + wmts[args.translate]['dic'][0][1]
+    source_dataset = os.path.join(args.data_path, wmts[args.translate]['train'][1][0])
+    target_dataset = os.path.join(args.data_path, wmts[args.translate]['train'][0][1])
+    valid_source_dataset = os.path.join(args.data_path, wmts[args.translate]['dev'][1][0])
+    valid_target_dataset = os.path.join(args.data_path, wmts[args.translate]['dev'][0][1])
+    source_dictionary = os.path.join(args.data_path, wmts[args.translate]['dic'][1][0])
+    target_dictionary = os.path.join(args.data_path, wmts[args.translate]['dic'][0][1])
 
     print args.save_path, save_file_name
     print source_dataset
@@ -68,7 +69,7 @@ def main(job_id, params):
         valid_datasets=[valid_source_dataset, valid_target_dataset],
         dictionaries=[source_dictionary, target_dictionary],
 
-	use_dropout=args.use_dropout,
+        use_dropout=args.use_dropout,
         source_word_level=args.source_word_level,
         target_word_level=args.target_word_level,
         save_every_saveFreq=1,
@@ -82,34 +83,38 @@ def main(job_id, params):
         gen_sample=gen_sample,
     )
     return validerr
+    pass
+
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument('-model_name', type=str, help="", default="bi-bpe2char")
-    parser.add_argument('-translate', type=str, default="de_en", help="de_en / cs_en / fi_en / ru_en")
+    parser.add_argument('-translate', type=str, default="pi_pw", help="de_en / cs_en / fi_en / ru_en / pi_pw")
 
-    parser.add_argument('-enc_dim', type=int, default=512, help="")
-    parser.add_argument('-dec_dim', type=int, default=1024, help="")
+    parser.add_argument('-enc_dim', type=int, default=256, help="")
+    parser.add_argument('-dec_dim', type=int, default=256, help="")
 
-    parser.add_argument('-dim_word', type=int, default=512, help="")
-    parser.add_argument('-dim_word_src', type=int, default=512, help="")
+    parser.add_argument('-dim_word', type=int, default=256, help="")
+    parser.add_argument('-dim_word_src', type=int, default=256, help="")
 
-    parser.add_argument('-batch_size', type=int, default=128, help="")
+    parser.add_argument('-batch_size', type=int, default=256, help="")
     parser.add_argument('-valid_batch_size', type=int, default=128, help="")
 
-    parser.add_argument('-maxlen', type=int, default=50, help="")
-    parser.add_argument('-maxlen_trg', type=int, default=500, help="")
-    parser.add_argument('-maxlen_sample', type=int, default=500, help="")
+    # max_len 102
+    parser.add_argument('-maxlen', type=int, default=94, help="")
+    # max_len_trg 16
+    parser.add_argument('-maxlen_trg', type=int, default=20, help="")
+    parser.add_argument('-maxlen_sample', type=int, default=20, help="")
 
     parser.add_argument('-re_load', action="store_true", default=False)
     parser.add_argument('-re_load_old_setting', action="store_true", default=False)
     parser.add_argument('-quit_immediately', action="store_true", default=False)
 
-    parser.add_argument('-use_dropout', action="store_true", default=False)
+    parser.add_argument('-use_dropout', action="store_true", default=True)
 
-    parser.add_argument('-max_epochs', type=int, default=1000000000000, help="")
-    parser.add_argument('-patience', type=int, default=-1, help="")
+    parser.add_argument('-max_epochs', type=int, default=10000000000, help="")
+    # parser.add_argument('-patience', type=int, default=-1, help="")
+    parser.add_argument('-patience', type=int, default=3, help="")
     parser.add_argument('-learning_rate', type=float, default=0.0001, help="")
 
     parser.add_argument('-n_words_src', type=int, default=302, help="298 for FI")
@@ -133,13 +138,17 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    n_words_dic = {'de_en': [24254, 302], 'cs_en': [21816, 302], 'fi_en':[20783, 292], 'ru_en':[22106, 302]}
+    n_words_dic = {'de_en': [24254, 302],
+                   'cs_en': [21816, 302],
+                   'fi_en': [20783, 292],
+                   'ru_en': [22106, 302],
+                   'pi_pw': [3166, 97]}
 
     args.n_words_src = n_words_dic[args.translate][0]
-    args.n_words= n_words_dic[args.translate][1]
+    args.n_words = n_words_dic[args.translate][1]
 
-    args.save_path = "/misc/kcgscratch1/ChoGroup/jasonlee/dl4mt-c2c/models/" # change accordingly
-    args.data_path = "/misc/kcgscratch1/ChoGroup/jasonlee/temp_data/wmt15/" # change accordingly
-    args.save_path = args.save_path + args.translate + "/"
+    args.save_path = r"/home/lanlin/workspace/dl4mt-c2c/models/"  # change accordingly
+    args.data_path = r"/home/lanlin/workspace/data"  # change accordingly
+    args.save_path = os.path.join(args.save_path, args.translate)
 
     main(0, args)

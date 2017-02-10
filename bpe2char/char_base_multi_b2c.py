@@ -1,6 +1,6 @@
-'''
+"""
 Build a simple neural language model using GRU units
-'''
+"""
 import theano
 from theano import tensor
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
@@ -16,6 +16,7 @@ import time
 
 from collections import OrderedDict
 from mixer import *
+
 
 def init_params(options):
     params = OrderedDict()
@@ -112,7 +113,7 @@ def build_model(tparams, options):
                                 prefix='encoderr', mask=xr_mask)
 
     # context
-    ctx = concatenate([proj, projr[::-1]], axis=proj.ndim-1)
+    ctx = concatenate([proj, projr[::-1]], axis=proj.ndim - 1)
 
     # context mean
     ctx_mean = (ctx * x_mask[:, :, None]).sum(0) / x_mask.sum(0)[:, None]
@@ -131,14 +132,14 @@ def build_model(tparams, options):
     yemb = yemb_shited
 
     char_h, word_h, ctxs, alphas = \
-            get_layer('two_layer_gru_decoder')[1](tparams, yemb, options,
-                                                  prefix='decoder',
-                                                  mask=y_mask,
-                                                  context=ctx,
-                                                  context_mask=x_mask,
-                                                  one_step=False,
-                                                  init_state_char=init_state_char,
-                                                  init_state_word=init_state_word)
+        get_layer('two_layer_gru_decoder')[1](tparams, yemb, options,
+                                              prefix='decoder',
+                                              mask=y_mask,
+                                              context=ctx,
+                                              context_mask=x_mask,
+                                              one_step=False,
+                                              init_state_char=init_state_char,
+                                              init_state_word=init_state_word)
 
     opt_ret['dec_alphas'] = alphas
 
@@ -158,7 +159,7 @@ def build_model(tparams, options):
     logit = get_layer('ff')[1](tparams, logit, options,
                                prefix='ff_logit', activ='linear')
     logit_shp = logit.shape
-    probs = tensor.nnet.softmax(logit.reshape([logit_shp[0]*logit_shp[1], logit_shp[2]]))
+    probs = tensor.nnet.softmax(logit.reshape([logit_shp[0] * logit_shp[1], logit_shp[2]]))
 
     # cost
     y_flat = y.flatten()
@@ -168,6 +169,7 @@ def build_model(tparams, options):
     cost = (cost * y_mask).sum(0)
 
     return trng, use_noise, x, x_mask, y, y_mask, opt_ret, cost
+
 
 def build_sampler(tparams, options, trng, use_noise):
     x = tensor.matrix('x', dtype='int64')
@@ -184,7 +186,7 @@ def build_sampler(tparams, options, trng, use_noise):
     proj = get_layer('gru')[1](tparams, emb, options, prefix='encoder')
     projr = get_layer('gru')[1](tparams, embr, options, prefix='encoderr')
 
-    ctx = concatenate([proj, projr[::-1]], axis=proj.ndim-1)
+    ctx = concatenate([proj, projr[::-1]], axis=proj.ndim - 1)
     ctx_mean = ctx.mean(0)
 
     init_state_char = get_layer('ff')[1](tparams, ctx_mean, options,
@@ -207,13 +209,13 @@ def build_sampler(tparams, options, trng, use_noise):
                          tparams['Wemb_dec'][y])
 
     next_state_char, next_state_word, next_ctx, next_alpha = \
-            get_layer('two_layer_gru_decoder')[1](tparams, yemb, options,
-                                                  prefix='decoder',
-                                                  context=ctx,
-                                                  mask=None,
-                                                  one_step=True,
-                                                  init_state_char=init_state_char,
-                                                  init_state_word=init_state_word)
+        get_layer('two_layer_gru_decoder')[1](tparams, yemb, options,
+                                              prefix='decoder',
+                                              context=ctx,
+                                              mask=None,
+                                              one_step=True,
+                                              init_state_char=init_state_char,
+                                              init_state_word=init_state_word)
 
     logit_rnn = get_layer('fff')[1](tparams,
                                     next_state_char,
@@ -255,7 +257,6 @@ def build_sampler(tparams, options, trng, use_noise):
 
 def gen_sample(tparams, f_init, f_next, x, options, trng=None,
                k=1, maxlen=500, stochastic=True, argmax=False):
-
     # k is the beam size we have
     if k > 1:
         assert not stochastic, \
@@ -295,7 +296,7 @@ def gen_sample(tparams, f_init, f_next, x, options, trng=None,
         else:
             cand_scores = hyp_scores[:, None] - numpy.log(next_p)
             cand_flat = cand_scores.flatten()
-            ranks_flat = cand_flat.argsort()[:(k-dead_k)]
+            ranks_flat = cand_flat.argsort()[:(k - dead_k)]
 
             voc_size = next_p.shape[1]
             trans_indices = ranks_flat / voc_size
@@ -303,12 +304,12 @@ def gen_sample(tparams, f_init, f_next, x, options, trng=None,
             costs = cand_flat[ranks_flat]
 
             new_hyp_samples = []
-            new_hyp_scores = numpy.zeros(k-dead_k).astype('float32')
+            new_hyp_scores = numpy.zeros(k - dead_k).astype('float32')
             new_hyp_states_char = []
             new_hyp_states_word = []
 
             for idx, [ti, wi] in enumerate(zip(trans_indices, word_indices)):
-                new_hyp_samples.append(hyp_samples[ti]+[wi])
+                new_hyp_samples.append(hyp_samples[ti] + [wi])
                 new_hyp_scores[idx] = copy.copy(costs[idx])
                 new_hyp_states_char.append(copy.copy(next_state_char[ti]))
                 new_hyp_states_word.append(copy.copy(next_state_word[ti]))

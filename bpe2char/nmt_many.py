@@ -26,6 +26,7 @@ from mixer import *
 from data_iterator import TextIterator
 from many_data_iterator import MultiTextIterator
 
+
 # batch preparation
 def prepare_data(seqs_x, seqs_y, maxlen=None, maxlen_trg=None,
                  n_words_src=30000, n_words=30000):
@@ -62,11 +63,12 @@ def prepare_data(seqs_x, seqs_y, maxlen=None, maxlen_trg=None,
     y_mask = numpy.zeros((maxlen_y, n_samples)).astype('float32')
     for idx, [s_x, s_y] in enumerate(zip(seqs_x, seqs_y)):
         x[:lengths_x[idx], idx] = s_x
-        x_mask[:lengths_x[idx]+1, idx] = 1.
+        x_mask[:lengths_x[idx] + 1, idx] = 1.
         y[:lengths_y[idx], idx] = s_y
-        y_mask[:lengths_y[idx]+1, idx] = 1.
+        y_mask[:lengths_y[idx] + 1, idx] = 1.
 
     return x, x_mask, y, y_mask, n_samples
+
 
 # calculate the log probablities on a given corpus using translation model
 # NOTE : just used for VALID
@@ -95,67 +97,67 @@ def pred_probs(f_log_probs, prepare_data, options, iterator, verbose=True, verbo
 
         if verbose:
             if numpy.mod(cnt, verboseFreq) == 0:
-                print >>sys.stderr, '%d samples computed' % (cnt * n_done)
+                print >> sys.stderr, '%d samples computed' % (cnt * n_done)
 
     return numpy.array(probs)
 
-def train(
-      dim_word=100,
-      dim_word_src=200,
-      enc_dim=1000,
-      dec_dim=1000,  # the number of LSTM units
-      patience=-1,  # early stopping patience
-      max_epochs=5000,
-      finish_after=-1,  # finish after this many updates
-      decay_c=0.,  # L2 regularization penalty
-      alpha_c=0.,  # alignment regularization
-      clip_c=-1.,  # gradient clipping threshold
-      lrate=0.01,  # learning rate
-      n_words_src=100000,  # source vocabulary size
-      n_words=100000,  # target vocabulary size
-      maxlen=1000,  # maximum length of the description
-      maxlen_trg=1000,  # maximum length of the description
-      maxlen_sample=1000,
-      optimizer='rmsprop',
-      batch_size=[1,2,3,4],
-      valid_batch_size=16,
-      sort_size=20,
-      save_path=None,
-      save_file_name='model',
-      save_best_models=0,
-      dispFreq=100,
-      validFreq=100,
-      saveFreq=1000,   # save the parameters after every saveFreq updates
-      sampleFreq=-1,
-      pbatchFreq=-1,
-      verboseFreq=10000,
-      datasets=[
-          'data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok',
-          '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok'],
-      valid_datasets=['../data/dev/newstest2011.en.tok',
-                      '../data/dev/newstest2011.fr.tok'],
-      dictionaries=[
-          '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok.pkl',
-          '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok.pkl'],
-      source_word_level=0,
-      target_word_level=0,
-      use_dropout=False,
-      re_load=False,
-      re_load_old_setting=False,
-      uidx=None,
-      eidx=None,
-      cidx=None,
-      layers=None,
-      save_every_saveFreq=0,
-      save_burn_in=20000,
-      use_bpe=0,
-      init_params=None,
-      build_model=None,
-      build_sampler=None,
-      gen_sample=None,
-      **kwargs
-    ):
 
+def train(
+        dim_word=100,
+        dim_word_src=200,
+        enc_dim=1000,
+        dec_dim=1000,  # the number of LSTM units
+        patience=-1,  # early stopping patience
+        max_epochs=5000,
+        finish_after=-1,  # finish after this many updates
+        decay_c=0.,  # L2 regularization penalty
+        alpha_c=0.,  # alignment regularization
+        clip_c=-1.,  # gradient clipping threshold
+        lrate=0.01,  # learning rate
+        n_words_src=100000,  # source vocabulary size
+        n_words=100000,  # target vocabulary size
+        maxlen=1000,  # maximum length of the description
+        maxlen_trg=1000,  # maximum length of the description
+        maxlen_sample=1000,
+        optimizer='rmsprop',
+        batch_size=[1, 2, 3, 4],
+        valid_batch_size=16,
+        sort_size=20,
+        save_path=None,
+        save_file_name='model',
+        save_best_models=0,
+        dispFreq=100,
+        validFreq=100,
+        saveFreq=1000,  # save the parameters after every saveFreq updates
+        sampleFreq=-1,
+        pbatchFreq=-1,
+        verboseFreq=10000,
+        datasets=[
+            'data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok',
+            '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok'],
+        valid_datasets=['../data/dev/newstest2011.en.tok',
+                        '../data/dev/newstest2011.fr.tok'],
+        dictionaries=[
+            '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok.pkl',
+            '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok.pkl'],
+        source_word_level=0,
+        target_word_level=0,
+        use_dropout=False,
+        re_load=False,
+        re_load_old_setting=False,
+        uidx=None,
+        eidx=None,
+        cidx=None,
+        layers=None,
+        save_every_saveFreq=0,
+        save_burn_in=20000,
+        use_bpe=0,
+        init_params=None,
+        build_model=None,
+        build_sampler=None,
+        gen_sample=None,
+        **kwargs
+):
     # Model options
     model_options = locals().copy()
     del model_options['init_params']
@@ -186,7 +188,7 @@ def train(
     model_name = '%s%s.pkl' % (save_path, save_file_name)
     params = init_params(model_options)
     cPickle.dump(model_options, open(model_name, 'wb'))
-    history_errs = [[],[],[],[]]
+    history_errs = [[], [], [], []]
 
     # reload options
     # reload : False
@@ -219,41 +221,41 @@ def train(
     print 'Loading data'
 
     train = MultiTextIterator(source=datasets[0],
-                         target=datasets[1],
-                         source_dict=dictionaries[0],
-                         target_dict=dictionaries[1],
-                         n_words_source=n_words_src,
-                         n_words_target=n_words,
-                         source_word_level=source_word_level,
-                         target_word_level=target_word_level,
-                         batch_size=batch_size,
-                         sort_size=sort_size)
+                              target=datasets[1],
+                              source_dict=dictionaries[0],
+                              target_dict=dictionaries[1],
+                              n_words_source=n_words_src,
+                              n_words_target=n_words,
+                              source_word_level=source_word_level,
+                              target_word_level=target_word_level,
+                              batch_size=batch_size,
+                              sort_size=sort_size)
 
     valid = [TextIterator(source=valid_dataset[0],
-                         target=valid_dataset[1],
-                         source_dict=dictionaries[0],
-                         target_dict=dictionaries[1],
-                         n_words_source=n_words_src,
-                         n_words_target=n_words,
-                         source_word_level=source_word_level,
-                         target_word_level=target_word_level,
-                         batch_size=valid_batch_size,
-                         sort_size=sort_size) for valid_dataset in valid_datasets]
+                          target=valid_dataset[1],
+                          source_dict=dictionaries[0],
+                          target_dict=dictionaries[1],
+                          n_words_source=n_words_src,
+                          n_words_target=n_words,
+                          source_word_level=source_word_level,
+                          target_word_level=target_word_level,
+                          batch_size=valid_batch_size,
+                          sort_size=sort_size) for valid_dataset in valid_datasets]
 
     # create shared variables for parameters
     tparams = init_tparams(params)
 
     trng, use_noise, \
-        x, x_mask, y, y_mask, \
-        opt_ret, \
-        cost = \
+    x, x_mask, y, y_mask, \
+    opt_ret, \
+    cost = \
         build_model(tparams, model_options)
     # NOTE : this is where we build the model
     inps = [x, x_mask, y, y_mask]
 
     print 'Building sampler...\n',
     f_init, f_next = build_sampler(tparams, model_options, trng, use_noise)
-    #print 'Done'
+    # print 'Done'
 
     # before any regularizer
     print 'Building f_log_probs...',
@@ -261,7 +263,7 @@ def train(
     # NOTE : f_log_probs : [x, x_mask, y, y_mask], cost
     print 'Done'
 
-    if re_load: # NOTE : this whole thing is False
+    if re_load:  # NOTE : this whole thing is False
         use_noise.set_value(0.)
         valid_scores = []
         for ii, vv in enumerate(valid):
@@ -294,7 +296,7 @@ def train(
         alpha_c = theano.shared(numpy.float32(alpha_c), name='alpha_c')
         alpha_reg = alpha_c * (
             (tensor.cast(y_mask.sum(0) // x_mask.sum(0), 'float32')[:, None] -
-             opt_ret['dec_alphas'].sum(0))**2).sum(1).mean()
+             opt_ret['dec_alphas'].sum(0)) ** 2).sum(1).mean()
         cost += alpha_reg
 
     # after all regularizers - compile the computational graph for cost
@@ -358,7 +360,7 @@ def train(
         # IndexError: index 14 is out of bounds for axis 1 with size 13
         print "Checkpointed minibatch number: %d" % cidx
         for cc in xrange(cidx):
-            if numpy.mod(cc, 1000)==0:
+            if numpy.mod(cc, 1000) == 0:
                 print "Jumping [%d / %d] examples" % (cc, cidx)
             train.next()
 
@@ -375,7 +377,7 @@ def train(
             cidx = 0
 
         for x, y in train:
-        # NOTE : x, y are [sen1, sen2, sen3 ...] where sen_i are of different length
+            # NOTE : x, y are [sen1, sen2, sen3 ...] where sen_i are of different length
             update_idx += 1
             cidx += 1
             uidx += 1
@@ -433,8 +435,8 @@ def train(
             if numpy.mod(uidx, dispFreq) == 0:
                 ud = time.time() - ud_start
                 wps = n_samples / float(time.time() - time0)
-                print 'Epoch ', eidx, 'Update ', uidx, 'Cost ', cost, 'NaN_in_grad', NaN_grad_cnt,\
-                      'NaN_in_cost', NaN_cost_cnt, 'Gradient_clipped', clipped_cnt, 'UD ', ud, "%.2f sentence/s" % wps
+                print 'Epoch ', eidx, 'Update ', uidx, 'Cost ', cost, 'NaN_in_grad', NaN_grad_cnt, \
+                    'NaN_in_cost', NaN_cost_cnt, 'Gradient_clipped', clipped_cnt, 'UD ', ud, "%.2f sentence/s" % wps
                 ud_start = time.time()
 
             if numpy.mod(uidx, pbatchFreq) == 0 and pbatchFreq != -1:
@@ -443,7 +445,8 @@ def train(
             # generate some samples with the model and display them
             if numpy.mod(uidx, sampleFreq) == 0 and sampleFreq != -1:
 
-                gen_list = [0, batch_size[0], batch_size[0]+batch_size[1],  batch_size[0]+batch_size[1]+batch_size[2]]
+                gen_list = [0, batch_size[0], batch_size[0] + batch_size[1],
+                            batch_size[0] + batch_size[1] + batch_size[2]]
                 gen_list = [ii for ii in gen_list if ii < n_x]
 
                 for jj in gen_list:
@@ -545,7 +548,7 @@ def train(
                     # sort of makes sense i suppose?
                     valid_errs = pred_probs(f_log_probs, prepare_data,
                                             model_options, vv, verboseFreq=verboseFreq,
-                                           )
+                                            )
                     valid_err = valid_errs.mean()
                     valid_scores.append(valid_err)
                     history_errs[ii].append(valid_err)
@@ -586,8 +589,8 @@ def train(
                                 cidx=cdix, **best_p)
                     numpy.savez(best_opt_file_name, **best_optp)
 
-
-                print 'Valid : DE {}\t CS {}\t FI {}\t RU {}'.format(valid_scores[0], valid_scores[1], valid_scores[2], valid_scores[3])
+                print 'Valid : DE {}\t CS {}\t FI {}\t RU {}'.format(valid_scores[0], valid_scores[1], valid_scores[2],
+                                                                     valid_scores[3])
 
             # save the best model so far
             if numpy.mod(uidx, saveFreq) == 0:
@@ -625,7 +628,7 @@ def train(
         print 'Seen %d samples' % n_samples
         lang_nos = (4535523, 12122376, 1926115, 2326893)
         lang_done = [x * update_idx for x in batch_size]
-        lang_rem = [x - y for x,y in zip(lang_nos, lang_done)]
+        lang_rem = [x - y for x, y in zip(lang_nos, lang_done)]
         print "Remaining : DE({}), CS({}), FI({}), RU({})".format(lang_rem[0], lang_rem[1], lang_rem[2], lang_rem[3])
         eidx += 1
 
@@ -640,7 +643,8 @@ def train(
                                model_options, vv).mean()
         valid_scores.append(valid_err)
 
-    print 'Valid : DE {}\t CS {}\t FI {}\t RU {}'.format(valid_scores[0], valid_scores[1], valid_scores[2], valid_scores[3])
+    print 'Valid : DE {}\t CS {}\t FI {}\t RU {}'.format(valid_scores[0], valid_scores[1], valid_scores[2],
+                                                         valid_scores[3])
 
     params = unzip(tparams)
     optparams = unzip(toptparams)
@@ -650,7 +654,7 @@ def train(
     numpy.savez(opt_file_name, **optparams)
     if best_p is not None and saveFreq != validFreq:
         best_file_name = '%s%s.%d.best.npz' % (save_path, save_file_name, uidx)
-        best_opt_file_name = '%s%s%s.%d.best.npz' % (save_path, save_file_name, '.grads',uidx)
+        best_opt_file_name = '%s%s%s.%d.best.npz' % (save_path, save_file_name, '.grads', uidx)
         numpy.savez(best_file_name, history_errs=history_errs, uidx=uidx, eidx=eidx, cidx=cidx, **best_p)
         numpy.savez(best_opt_file_name, **best_optp)
 
