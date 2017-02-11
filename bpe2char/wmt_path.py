@@ -43,7 +43,7 @@ deen = {
 
 pipw = {
     "dic": [
-        ["pipw_1.0/train/all_pi-pw.pi.tok.302.pkl",
+        ["pipw_1.0/train/all_pi-pw.pi.tok.304.pkl",
          "pipw_1.0/train/all_pi-pw.pw.tok.302.pkl", ],
 
         ["pipw_1.0/train/all_pi-pw.pi.tok.bpe.word.pkl"],

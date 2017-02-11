@@ -44,7 +44,7 @@ for line in codecs.open(local_file, 'r', 'utf-8'):
     # version max_len max_len_trg
     # pipw_1.0 94 20
     # dict size
-    # 3166 3234 69 97
+    # 3166 3234 71 97
     cur_feat = ' '.join([pinyin, birth, username, email_prefix])
 
     rng = random.random()

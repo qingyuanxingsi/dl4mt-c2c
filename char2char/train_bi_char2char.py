@@ -10,6 +10,13 @@ from conv_tools import *
 from prepare_data import *
 
 
+"""
+-- Fix Bug --
+Src size:71
+Dst size:97
+"""
+
+
 def main(job_id, args):
     save_file_name = args.model_name
     source_dataset = args.data_path + wmts[args.translate]['train'][0][0]
@@ -113,7 +120,7 @@ if __name__ == '__main__':
     parser.add_argument('-dropout_gru', type=int, default=0, help="")
     parser.add_argument('-dropout_softmax', type=int, default=0, help="")
 
-    parser.add_argument('-maxlen', type=int, default=80, help="")
+    parser.add_argument('-maxlen', type=int, default=120, help="")
     parser.add_argument('-maxlen_trg', type=int, default=20, help="")
     parser.add_argument('-maxlen_sample', type=int, default=20, help="")
 
@@ -151,7 +158,7 @@ if __name__ == '__main__':
 
     if args.translate == "pi_pw":
         args.n_words_src = 71
-        args.n_words = 76
+        args.n_words = 97
 
     if args.translate not in "pi_pw de_en cs_en fi_en ru_en".split():
         raise Exception('1')

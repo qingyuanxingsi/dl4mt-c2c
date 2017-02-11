@@ -80,34 +80,34 @@ pipw = {
 
 pipw = {
     "dic": [
-        ["pipw_aug/train/all_pi-pw.pi.tok.300.pkl",
-         "pipw_aug/train/all_pi-pw.pw.tok.300.pkl", ],
+        ["pipw_1.0/train/all_pi-pw.pi.tok.304.pkl",
+         "pipw_1.0/train/all_pi-pw.pw.tok.302.pkl", ],
 
-        ["pipw_aug/train/all_pi-pw.pi.tok.bpe.word.pkl"],
+        ["pipw_1.0/train/all_pi-pw.pi.tok.bpe.word.pkl"],
     ],
 
     "train": [
-        ["pipw_aug/train/all_pi-pw.pi.tok.shuf",
-         "pipw_aug/train/all_pi-pw.pw.tok.shuf", ],
+        ["pipw_1.0/train/all_pi-pw.pi.tok.shuf",
+         "pipw_1.0/train/all_pi-pw.pw.tok.shuf", ],
 
-        ["pipw_aug/train/all_pi-pw.pi.tok.bpe.shuf",
-         "pipw_aug/train/all_pi-pw.pw.tok.bpe.shuf", ],
+        ["pipw_1.0/train/all_pi-pw.pi.tok.bpe.shuf",
+         "pipw_1.0/train/all_pi-pw.pw.tok.bpe.shuf", ],
     ],
 
     "dev": [
-        ["pipw_aug/dev/all_pi-pw.pi.tok.shuf",
-         "pipw_aug/dev/all_pi-pw.pw.tok.shuf", ],
+        ["pipw_1.0/dev/all_pi-pw.pi.tok.shuf",
+         "pipw_1.0/dev/all_pi-pw.pw.tok.shuf", ],
 
-        ["pipw_aug/dev/all_pi-pw.pi.tok.bpe.shuf",
-         "pipw_aug/dev/all_pi-pw.pw.tok.bpe.shuf", ],
+        ["pipw_1.0/dev/all_pi-pw.pi.tok.bpe.shuf",
+         "pipw_1.0/dev/all_pi-pw.pw.tok.bpe.shuf", ],
     ],
 
     "test1": [
-        ["pipw_aug/test/all_pi-pw.pi.tok.shuf",
-         "pipw_aug/test/all_pi-pw.pw.tok.shuf", ],
+        ["pipw_1.0/test/all_pi-pw.pi.tok.shuf",
+         "pipw_1.0/test/all_pi-pw.pw.tok.shuf", ],
 
-        ["pipw_aug/test/all_pi-pw.pi.tok.bpe.shuf",
-         "pipw_aug/test/all_pi-pw.pw.tok.bpe.shuf", ],
+        ["pipw_1.0/test/all_pi-pw.pi.tok.bpe.shuf",
+         "pipw_1.0/test/all_pi-pw.pw.tok.bpe.shuf", ],
     ],
 }
 
