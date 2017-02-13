@@ -72,6 +72,14 @@ pipw = {
         ["pipw_1.0/test/all_pi-pw.pi.tok.bpe.shuf",
          "pipw_1.0/test/all_pi-pw.pw.tok.bpe.shuf", ],
     ],
+
+    "test2": [
+        ["pipw_1.0/test/all_pi-pw.pi.tok2.shuf",
+         "pipw_1.0/test/all_pi-pw.pw.tok2.shuf", ],
+
+        ["pipw_1.0/test/all_pi-pw.pi.tok2.bpe.shuf",
+         "pipw_1.0/test/all_pi-pw.pw.tok2.bpe.shuf", ],
+    ],
 }
 
 """

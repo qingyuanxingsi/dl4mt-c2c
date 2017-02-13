@@ -51,11 +51,11 @@ ranks = []
 for idx, file_path in enumerate(file_lists):
     rank, ratio = gen_curve(file_path)
     plt.hold(True)
-    plt.semilogx(rank, ratio, basex=2, label=labels[idx])
+    plt.semilogx(rank, ratio, basex=10, label=labels[idx])
 plt.grid(True)
 plt.xlabel(u'猜测次数')
 plt.ylabel(u'猜中比例')
-plt.xlim([2**0, 2**27])
+plt.xlim([10**0, 10**8])
 # plt.savefig(r'G:\workspace\python\dl4mt-c2c\result\figs\bpe2char_guess_number_ratio.jpg')
 plt.legend()
 plt.show()

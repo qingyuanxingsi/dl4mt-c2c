@@ -16,6 +16,9 @@ import random
 import theano
 
 
+# python evaluate/bpe2char_meter_evaluate.py -model /home/lanlin/workspace/dl4mt-c2c/models/pi_pwbi-bpe2char.grads.370000.npz -saveto /home/lanlin/workspace/dl4mt-c2c/result/bpe2char_370000_test.txt -translate pi_pw
+
+
 def main(model, src_dict, target_dict, source_file, target_file, saveto,
          source_word_level=1,
          target_word_level=0,
@@ -91,7 +94,7 @@ if __name__ == "__main__":
     parser.add_argument('-model', type=str)  # absolute path to a model (.npz file)
     parser.add_argument('-translate', type=str, help="de_en / cs_en / fi_en / ru_en / pi_pw")  # which language?
     parser.add_argument('-saveto', type=str)  # absolute path where the translation should be saved
-    parser.add_argument('-which', type=str, help="dev / test1 / test2", default="test1")
+    parser.add_argument('-which', type=str, help="dev / test1 / test2", default="test2")
     parser.add_argument('-sort_size', type=int, default=20, help="")
     parser.add_argument('-source_word_level', type=int, default=1, help="")
     parser.add_argument('-target_word_level', type=int, default=0, help="")

@@ -102,14 +102,17 @@ if __name__ == '__main__':
     parser.add_argument('-translate', type=str, default="pi_pw", help="de_en / cs_en / fi_en / ru_en / pi_pw")
     parser.add_argument('-highway', type=int, default=3)
 
-    parser.add_argument('-conv_width', type=str, default="1-2-3-4-5-6-7-8")
-    parser.add_argument('-conv_nkernels', type=str, default="200-200-250-250-300-300-300-300")
+    # parser.add_argument('-conv_width', type=str, default="1-2-3-4-5-6-7-8")
+    # parser.add_argument('-conv_nkernels', type=str, default="200-200-250-250-300-300-300-300")
+
+    parser.add_argument('-conv_width', type=str, default="1-2-3-4-5-6-7")
+    parser.add_argument('-conv_nkernels', type=str, default="100-100-125-125-150-150-150")
 
     parser.add_argument('-pool_window', type=int, default=4)
     parser.add_argument('-pool_stride', type=int, default=4)
 
     parser.add_argument('-enc_dim', type=int, default=256)
-    parser.add_argument('-dec_dim', type=int, default=512)
+    parser.add_argument('-dec_dim', type=int, default=256)
 
     parser.add_argument('-dim_word', type=int, default=256)
     parser.add_argument('-dim_word_src', type=int, default=128)
@@ -120,7 +123,7 @@ if __name__ == '__main__':
     parser.add_argument('-dropout_gru', type=int, default=0, help="")
     parser.add_argument('-dropout_softmax', type=int, default=0, help="")
 
-    parser.add_argument('-maxlen', type=int, default=120, help="")
+    parser.add_argument('-maxlen', type=int, default=100, help="")
     parser.add_argument('-maxlen_trg', type=int, default=20, help="")
     parser.add_argument('-maxlen_sample', type=int, default=20, help="")
 

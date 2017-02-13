@@ -7,3 +7,8 @@ python /home/lanlin/workspace/dl4mt-c2c/preprocess/build_dictionary_word.py all_
 python /home/lanlin/workspace/dl4mt-c2c/preprocess/build_dictionary_word.py all_pi-pw.pw.tok.bpe
 python ~/workspace/dl4mt-c2c/preprocess/build_dictionary_char.py all_pi-pw.pi.tok
 python ~/workspace/dl4mt-c2c/preprocess/build_dictionary_char.py all_pi-pw.pw.tok
+
+# test2
+python ~/workspace/subword-nmt/apply_bpe.py -c ../pw.bpe < all_pi-pw.pw.tok2 > all_pi-pw.pw.tok2.bpe
+python ~/workspace/subword-nmt/apply_bpe.py -c ../pi.bpe < all_pi-pw.pi.tok2 > all_pi-pw.pi.tok2.bpe
+python ~/workspace/dl4mt-c2c/preprocess/shuffle.py all_pi-pw.pi.tok2.bpe all_pi-pw.pw.tok2.bpe all_pi-pw.pi.tok2 all_pi-pw.pw.tok2
