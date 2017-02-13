@@ -2,7 +2,7 @@
 
 import math
 
-local_file = r'D:\data\leak_final_20161219\pipw_1.0\bpe2char_95000_test.txt'
+local_file = r'D:\data\leak_final_20161219\pipw_1.0\bpe2char_360000_test.txt'
 out_file = open(r'D:\data\leak_final_20161219\pipw_1.0\bpe2char_test_result.txt', 'w')
 
 """

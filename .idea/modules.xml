@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/dl4mt-c2c.iml" filepath="$PROJECT_DIR$/.idea/dl4mt-c2c.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../neural_network_cracking/.idea/neural_network_cracking.iml" filepath="$PROJECT_DIR$/../neural_network_cracking/.idea/neural_network_cracking.iml" />
     </modules>
   </component>
 </project>

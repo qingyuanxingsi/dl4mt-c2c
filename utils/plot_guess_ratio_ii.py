@@ -23,7 +23,7 @@ def gen_curve(file_path):
     pwd_cnt = 0
     cur_cnt = 0
     for line in codecs.open(file_path, 'r', 'utf-8'):
-        pieces = line.strip().split()
+        pieces = line.split('\t')
         rank = float(pieces[2])
         if rank != prev_rank:
             if cur_cnt != 0:
@@ -31,19 +31,14 @@ def gen_curve(file_path):
                 guess_cnt.append(pwd_cnt)
                 cur_cnt = 0
             prev_rank = rank
-            cur_cnt += 1
-        else:
-            cur_cnt += 1
+        cur_cnt += 1
         pwd_cnt += 1
     if cur_cnt != 0:
         rank_list.append(prev_rank)
         guess_cnt.append(pwd_cnt)
 
-    if rank_list[0] != 0.0:
-        rank_list.insert(0, 0)
-        guess_cnt.insert(0, 0)
     rank_list = np.array(rank_list)
-    guess_ratio = np.array(guess_cnt)/pwd_cnt
+    guess_ratio = np.array(guess_cnt)/float(pwd_cnt)
     return rank_list, guess_ratio, pwd_cnt
 
 file_lists = [r'D:\data\leak_final_20161219\pipw_1.0\pcfg_guess_number.txt',
