@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/dl4mt-c2c.iml" filepath="$PROJECT_DIR$/.idea/dl4mt-c2c.iml" />
       <module fileurl="file://$PROJECT_DIR$/../neural_network_cracking/.idea/neural_network_cracking.iml" filepath="$PROJECT_DIR$/../neural_network_cracking/.idea/neural_network_cracking.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../pwd_utils/.idea/pwd_utils.iml" filepath="$PROJECT_DIR$/../pwd_utils/.idea/pwd_utils.iml" />
     </modules>
   </component>
 </project>
