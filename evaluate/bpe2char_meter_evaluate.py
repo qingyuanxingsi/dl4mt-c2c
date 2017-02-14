@@ -80,7 +80,7 @@ def main(model, src_dict, target_dict, source_file, target_file, saveto,
     output_file = open(saveto, 'w')
     pwd_cnt = 0
     for line in open(target_file):
-        output_file.writelines(line.rstrip()+'\t'+str(log_probs[pwd_cnt])+'\n')
+        output_file.writelines(line.rstrip()+'----'+str(log_probs[pwd_cnt])+'\n')
         pwd_cnt += 1
     """
     for prob in log_probs:
