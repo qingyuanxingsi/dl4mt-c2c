@@ -118,10 +118,10 @@ class PCFGMeter:
         output_file.close()
 
 if __name__ == '__main__':
-    pcfg_meter = PCFGMeter(r'D:\data\leak_final_20161219\pcfg_pipw_1.0',
-                           [r'D:\data\leak_final_20161219\pcfg_pipw_1.0\dics\dic-0294.txt'])
-    pcfg_meter.gen_prob(r'D:\data\leak_final_20161219\pipw_1.0\test\pwd_unique_test.txt',
-                        r'D:\data\leak_final_20161219\pipw_1.0\test\pcfg_test_probs.txt')
+    pcfg_meter = PCFGMeter(r'D:\data\leak_final\pcfg_pipw_1.0',
+                           [r'D:\data\leak_final\pcfg_pipw_1.0\dics\dic-0294.txt'])
+    pcfg_meter.gen_prob(r'D:\data\leak_final\pipw_1.0\test\pwd_unique_test.txt',
+                        r'D:\data\leak_final\pipw_1.0\pcfg_test_probs.txt')
 
 
 

@@ -79,8 +79,14 @@ def main(model, src_dict, target_dict, source_file, target_file, saveto,
                            verboseFreq=10000)
     print('Done...')
     output_file = open(saveto, 'w')
+    pwd_cnt = 0
+    for line in open(target_file):
+        output_file.writelines(line.rstrip()+'\t'+str(log_probs[pwd_cnt])+'\n')
+        pwd_cnt += 1
+    """
     for prob in log_probs:
         output_file.writelines(str(prob) + '\n')
+    """
     output_file.flush()
     output_file.close()
     print('Evaluation finished...')
