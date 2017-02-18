@@ -2,6 +2,8 @@ import argparse
 import sys
 import os
 import time
+import random
+import math
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -62,7 +64,7 @@ def translate_model(jobqueue, resultqueue, model, options, k, normalize, build_s
 
 
 def main(model, dictionary, dictionary_target, source_file, saveto, k=6,
-         normalize=False, encoder_chr_level=False,
+         ratio=0.1, normalize=False, encoder_chr_level=False,
          decoder_chr_level=False, utf8=False,
          model_id=None, silent=False, ):
     from char_base import (build_sampler, gen_sample, init_params)
@@ -115,8 +117,12 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=6,
         return capsw
 
     def _send_jobs(fname):
+        sample_cnt = 0
         with open(fname, 'r') as f:
             for idx, line in enumerate(f):
+                # Jump several samples
+                if random.random() > ratio:
+                    continue
                 # idx : 0 ... len-1 
 
                 if encoder_chr_level:
@@ -128,14 +134,16 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=6,
                 x = map(lambda ii: ii if ii < options['n_words_src'] else 1, x)
                 x += [0]
                 jobqueue.append((idx, x))
-        return idx + 1
+                sample_cnt += 1
+        return sample_cnt
 
     def _retrieve_jobs(n_samples, silent):
         trans = [None] * n_samples
 
         for idx in xrange(n_samples):
             resp = resultqueue.pop(0)
-            trans[resp[0]] = (resp[1], resp[2])
+            trans[idx] = (resp[1], resp[2])
+            # trans[resp[0]] = (resp[1], resp[2])
             if numpy.mod(idx, 10) == 0:
                 if not silent:
                     print 'Sample ', (idx + 1), '/', n_samples, ' Done'
@@ -150,7 +158,7 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=6,
     translate_model(jobqueue, resultqueue, model, options, k, normalize, build_sampler, gen_sample, init_params,
                     model_id, silent)
     trans = _seqs2words(_retrieve_jobs(n_samples, silent))
-    final_trans = [tran[0] + '----' + str(tran[1]) for tran in trans]
+    final_trans = [tran[0] + '\t' + str(1.0/(math.e**tran[1])) for tran in trans]
     print "translations retrieved"
 
     with open(saveto, 'w') as f:
@@ -162,6 +170,7 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=6,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-k', type=int, default=20)  # beam width
+    parser.add_argument('-ratio', type=float, default=0.01)
     parser.add_argument('-n', action="store_true",
                         default=False)
     # normalize scores for different hypothesis based on their length
@@ -234,6 +243,7 @@ if __name__ == "__main__":
 
     print "src dict:", dictionary
     print "trg dict:", dictionary_target
+    print "Translation Ratio:", args.ratio
     print "source:", source
 
     print "dest :", args.saveto
@@ -242,7 +252,7 @@ if __name__ == "__main__":
 
     time1 = time.time()
     main(args.model, dictionary, dictionary_target, source,
-         args.saveto, k=args.k, normalize=args.n, encoder_chr_level=args.enc_c,
+         args.saveto, k=args.k, ratio=args.ratio, normalize=args.n, encoder_chr_level=args.enc_c,
          decoder_chr_level=args.dec_c,
          utf8=args.utf8,
          model_id=model_id,

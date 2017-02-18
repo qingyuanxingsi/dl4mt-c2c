@@ -14,6 +14,7 @@ from mixer import *
 from data_iterator import TextIterator
 import random
 import theano
+import math
 
 
 # python evaluate/bpe2char_meter_evaluate.py -model /home/lanlin/workspace/dl4mt-c2c/models/pi_pwbi-bpe2char.grads.370000.npz -saveto /home/lanlin/workspace/dl4mt-c2c/result/bpe2char_370000_test.txt -translate pi_pw
@@ -80,7 +81,7 @@ def main(model, src_dict, target_dict, source_file, target_file, saveto,
     output_file = open(saveto, 'w')
     pwd_cnt = 0
     for line in open(target_file):
-        output_file.writelines(line.rstrip()+'----'+str(log_probs[pwd_cnt])+'\n')
+        output_file.writelines(line.rstrip()+'\t'+str(1.0/(math.e**log_probs[pwd_cnt]))+'\n')
         pwd_cnt += 1
     """
     for prob in log_probs:

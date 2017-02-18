@@ -133,7 +133,7 @@ if __name__ == '__main__':
                         help="if true, will not proceed training, only print the size of the model.")
 
     parser.add_argument('-max_epochs', type=int, default=1000000000000, help="")
-    parser.add_argument('-patience', type=int, default=3, help="")
+    parser.add_argument('-patience', type=int, default=2, help="")
     parser.add_argument('-learning_rate', type=float, default=0.0001, help="")
 
     parser.add_argument('-n_words_src', type=int, default=304, help="298 for FI-EN")
