@@ -228,9 +228,10 @@ if __name__ == "__main__":
         aa = args.translate.split("_")
         lang = aa[0]
         en = aa[1]
+        version = '1.0'
 
-        dictionary = "%s%s/train/all_%s-%s.%s.tok.300.pkl" % (lang, en, lang, en, lang)
-        dictionary_target = "%s%s/train/all_%s-%s.%s.tok.300.pkl" % (lang, en, lang, en, en)
+        dictionary = "%s%s_%s/train/all_%s-%s.%s.tok.304.pkl" % (lang, en, version, lang, en, lang)
+        dictionary_target = "%s%s_%s/train/all_%s-%s.%s.tok.302.pkl" % (lang, en, version, lang, en, en)
         source = wmts[args.translate][args.which][0][0]
 
     char_base = args.model.split("/")[-1]
