@@ -2,6 +2,7 @@ import argparse
 import sys
 import os
 import time
+import math
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -81,7 +82,7 @@ def main(model, src_dict, target_dict, source_file, target_file, saveto,
     output_file = open(saveto, 'w')
     pwd_cnt = 0
     for line in open(target_file):
-        output_file.writelines(line.rstrip()+'\t'+str(log_probs[pwd_cnt])+'\n')
+        output_file.writelines(line.rstrip()+'\t'+str(1.0/math.e**(log_probs[pwd_cnt]))+'\n')
         pwd_cnt += 1
     """
     for prob in log_probs:
@@ -101,14 +102,14 @@ if __name__ == "__main__":
     parser.add_argument('-model', type=str)  # absolute path to a model (.npz file)
     parser.add_argument('-translate', type=str, help="de_en / cs_en / fi_en / ru_en / pi_pw")  # which language?
     parser.add_argument('-saveto', type=str)  # absolute path where the translation should be saved
-    parser.add_argument('-which', type=str, help="dev / test1 / test2", default="test1")
+    parser.add_argument('-which', type=str, help="dev / test1 / test2", default="test2")
     parser.add_argument('-sort_size', type=int, default=20, help="")
     parser.add_argument('-source_word_level', type=int, default=0, help="")
     parser.add_argument('-target_word_level', type=int, default=0, help="")
     parser.add_argument('-valid_batch_size', type=int, default=128, help="")
     parser.add_argument('-n_words_src', type=int, default=302, help="298 for FI")
     parser.add_argument('-n_words', type=int, default=302, help="292 for FI")
-    parser.add_argument('-pool_stride', type=int, default=5)
+    parser.add_argument('-pool_stride', type=int, default=4)
     # if you wish to translate any of development / test1 / test2 file from WMT15,
     # simply specify which one here
     parser.add_argument('-source', type=str,
@@ -136,8 +137,9 @@ if __name__ == "__main__":
     lang = aa[0]
     en = aa[1]
 
-    dictionary = "%s%s/train/all_%s-%s.%s.tok.300.pkl" % (lang, en, lang, en, lang)
-    dictionary_target = "%s%s/train/all_%s-%s.%s.tok.300.pkl" % (lang, en, lang, en, en)
+    version = '1.0'
+    dictionary = "%s%s_%s/train/all_%s-%s.%s.tok.304.pkl" % (lang, en, version, lang, en, lang)
+    dictionary_target = "%s%s_%s/train/all_%s-%s.%s.tok.302.pkl" % (lang, en, version, lang, en, en)
     source = wmts[args.translate][args.which][0][0]
     target = wmts[args.translate][args.which][0][1]
 
@@ -161,8 +163,8 @@ if __name__ == "__main__":
         args.n_words = 302
 
     if args.translate == "pi_pw":
-        args.n_words_src = 70
-        args.n_words = 78
+        args.n_words_src = 71
+        args.n_words = 97
 
     print "src dict:", dictionary
     print "trg dict:", dictionary_target

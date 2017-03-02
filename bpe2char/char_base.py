@@ -220,7 +220,10 @@ def build_sampler(tparams, options, trng, use_noise):
 
     next_state_char, next_state_word, next_ctx, next_alpha = \
         get_layer('two_layer_gru_decoder')[1](tparams, yemb, options,
-                                              prefix='decoder',
+                                              prefix=''
+                                                     ''
+                                                     ''
+                                                     '',
                                               context=ctx,
                                               mask=None,
                                               one_step=True,

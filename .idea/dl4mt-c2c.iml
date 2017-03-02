@@ -6,5 +6,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="neural_network_cracking" />
     <orderEntry type="module" module-name="pwd_utils" />
+    <orderEntry type="module" module-name="subword-nmt" />
   </component>
 </module>

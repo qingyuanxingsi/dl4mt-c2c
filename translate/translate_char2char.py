@@ -14,6 +14,11 @@ import cPickle as pkl
 from mixer import *
 import random
 
+# unit:s
+# char2char GPU 0.0026762857
+# char2char CPU 0.011142
+# bpe2char CPU 0.010171
+# bpe2char  GPU 0.0024158333
 # python translate/translate_char2char.py -model /home/lanlin/workspace/dl4mt-c2c/models/pi_pw/bi-char2char.grads.85000.npz -saveto /home/lanlin/workspace/dl4mt-c2c/result/char2char_85000_result.txt -translate pi_pw
 
 def translate_model(jobqueue, resultqueue, model, options, k, normalize, build_sampler, gen_sample, init_params,
@@ -154,7 +159,7 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
 
         for idx in xrange(n_samples):
             resp = resultqueue.pop(0)
-            trans[resp[0]] = (resp[1], resp[2])
+            trans[idx] = (resp[1], resp[2])
             if numpy.mod(idx, 10) == 0:
                 if not silent:
                     print 'Sample ', (idx + 1), '/', n_samples, ' Done', model_id
